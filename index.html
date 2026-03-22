@@ -8,782 +8,181 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d0f14;
-    --surface: #161920;
-    --surface2: #1e2229;
-    --border: #2a2f3a;
-    --text: #e8eaf0;
-    --muted: #7a8099;
-    --gc-blue: #0066cc;
-    --green: #22c55e;
-    --yellow: #f59e0b;
-    --red: #ef4444;
-    --orange: #f97316;
-    --accent: #38bdf8;
-    --font-mono: 'DM Mono', monospace;
-    --font-sans: 'DM Sans', sans-serif;
+    --bg:#0d0f14;--surface:#161920;--surface2:#1e2229;--border:#2a2f3a;
+    --text:#e8eaf0;--muted:#7a8099;--gc-blue:#0066cc;
+    --green:#22c55e;--yellow:#f59e0b;--red:#ef4444;--orange:#f97316;--accent:#38bdf8;
+    --font-mono:'DM Mono',monospace;--font-sans:'DM Sans',sans-serif;
   }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-sans);
-    min-height: 100vh;
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{background:var(--bg);color:var(--text);font-family:var(--font-sans);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  #loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999}
+  .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--gc-blue);border-radius:50%;animation:spin 0.8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #loading p{font-size:13px;color:var(--muted)}
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+  .logo{display:flex;align-items:center;gap:10px}
+  .logo-icon{width:32px;height:32px;background:var(--gc-blue);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;font-family:var(--font-mono);flex-shrink:0}
+  .logo-text{font-size:14px;font-weight:600}
+  .logo-sub{font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+  .week-badge{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-size:10px;font-family:var(--font-mono);color:var(--accent);white-space:nowrap}
+  .salon-tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .salon-tabs::-webkit-scrollbar{display:none}
+  .tab-btn{background:none;border:none;color:var(--muted);font-family:var(--font-sans);font-size:12px;font-weight:500;padding:10px 16px 11px;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;flex-shrink:0}
+  .tab-btn:hover{color:var(--text)}
+  .tab-btn.active{color:var(--text);border-bottom-color:var(--gc-blue)}
+  .tab-num{font-family:var(--font-mono);font-size:9px;color:var(--gc-blue);display:block;margin-bottom:1px}
+  .main{padding:16px;max-width:900px;margin:0 auto}
+  .salon-panel{display:none}
+  .salon-panel.active{display:block}
+  .section-label{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;padding-left:2px}
+  .kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+  @media(min-width:600px){.kpi-row{grid-template-columns:repeat(4,1fr)}}
+  .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 14px 12px;position:relative;overflow:hidden}
+  .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent-color,var(--gc-blue))}
+  .kpi-label{font-size:9px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;line-height:1.3}
+  .kpi-value{font-family:var(--font-mono);font-size:22px;font-weight:500;color:var(--text);line-height:1}
+  .kpi-value span{font-size:12px;color:var(--muted)}
+  .kpi-sub{font-size:10px;color:var(--muted);margin-top:5px;line-height:1.3}
+  .badge{display:inline-block;font-family:var(--font-mono);font-size:9px;padding:1px 5px;border-radius:3px;font-weight:500}
+  .badge.green{background:rgba(34,197,94,.15);color:#4ade80}
+  .badge.red{background:rgba(239,68,68,.15);color:#f87171}
+  .badge.yellow{background:rgba(245,158,11,.15);color:#fbbf24}
+  .badge.blue{background:rgba(56,189,248,.15);color:var(--accent)}
+  .alert-banner{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:11px 14px;margin-bottom:16px;display:flex;gap:8px;font-size:12px;color:#fca5a5;line-height:1.5}
+  .info-banner{background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.2);border-radius:8px;padding:11px 14px;margin-bottom:16px;display:flex;gap:8px;font-size:12px;color:var(--accent);line-height:1.5}
+  .alert-icon{flex-shrink:0;font-size:14px;margin-top:1px}
+  .charts-row{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:20px}
+  @media(min-width:700px){.charts-row{grid-template-columns:1.6fr 1fr}}
+  .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px}
+  .chart-title{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+  .chart-wrap{position:relative;height:180px}
+  .stylist-section{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+  .stylist-header{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .stylist-title{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+  .stylist-note{font-size:10px;color:var(--muted);font-style:italic}
+  .stylist-cards{padding:8px;display:flex;flex-direction:column;gap:8px}
+  .stylist-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+  .sc-name{font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text)}
+  .sc-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .sc-metric-label{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+  .stylist-table-wrap{display:none}
+  @media(min-width:700px){
+    .stylist-cards{display:none}
+    .stylist-table-wrap{display:block}
+    table{width:100%;border-collapse:collapse}
+    th{padding:9px 14px;font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;border-bottom:1px solid var(--border);background:var(--surface2);white-space:nowrap}
+    th.right{text-align:right}
+    td{padding:10px 14px;font-size:13px;border-bottom:1px solid rgba(42,47,58,.6);vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    tr:hover td{background:rgba(255,255,255,.02)}
+    td.right{text-align:right}
+    td.bold{font-weight:500}
   }
-
-  /* HEADER */
-  header {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 0 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 56px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  .logo { display: flex; align-items: center; gap: 10px; }
-  .logo-icon {
-    width: 32px; height: 32px;
-    background: var(--gc-blue);
-    border-radius: 7px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px; font-weight: 700; color: white;
-    font-family: var(--font-mono);
-    flex-shrink: 0;
-  }
-  .logo-text { font-size: 14px; font-weight: 600; }
-  .logo-sub { font-size: 10px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
-  .week-badge {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 4px 10px;
-    font-size: 10px;
-    font-family: var(--font-mono);
-    color: var(--accent);
-    white-space: nowrap;
-  }
-
-  /* SALON TABS - horizontal scroll */
-  .salon-tabs {
-    display: flex;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-  .salon-tabs::-webkit-scrollbar { display: none; }
-
-  .tab-btn {
-    background: none;
-    border: none;
-    color: var(--muted);
-    font-family: var(--font-sans);
-    font-size: 12px;
-    font-weight: 500;
-    padding: 10px 16px 11px;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.15s;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .tab-btn:hover { color: var(--text); }
-  .tab-btn.active {
-    color: var(--text);
-    border-bottom-color: var(--gc-blue);
-  }
-  .tab-num {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    color: var(--gc-blue);
-    display: block;
-    margin-bottom: 1px;
-  }
-
-  /* MAIN */
-  .main { padding: 16px; max-width: 900px; margin: 0 auto; }
-  .salon-panel { display: none; }
-  .salon-panel.active { display: block; }
-
-  .section-label {
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 10px;
-    padding-left: 2px;
-  }
-
-  /* KPI GRID - 2 cols on mobile, 4 on desktop */
-  .kpi-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  @media (min-width: 600px) {
-    .kpi-row { grid-template-columns: repeat(4, 1fr); }
-  }
-
-  .kpi-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 14px 12px;
-    position: relative;
-    overflow: hidden;
-  }
-  .kpi-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: var(--accent-color, var(--gc-blue));
-  }
-  .kpi-label {
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 6px;
-    line-height: 1.3;
-  }
-  .kpi-value {
-    font-family: var(--font-mono);
-    font-size: 22px;
-    font-weight: 500;
-    color: var(--text);
-    line-height: 1;
-  }
-  .kpi-value span { font-size: 12px; color: var(--muted); }
-  .kpi-sub {
-    font-size: 10px;
-    color: var(--muted);
-    margin-top: 5px;
-    line-height: 1.3;
-  }
-  .badge {
-    display: inline-block;
-    font-family: var(--font-mono);
-    font-size: 9px;
-    padding: 1px 5px;
-    border-radius: 3px;
-    font-weight: 500;
-  }
-  .badge.green { background: rgba(34,197,94,0.15); color: #4ade80; }
-  .badge.red   { background: rgba(239,68,68,0.15); color: #f87171; }
-  .badge.yellow{ background: rgba(245,158,11,0.15); color: #fbbf24; }
-  .badge.blue  { background: rgba(56,189,248,0.15); color: var(--accent); }
-
-  /* ALERT */
-  .alert-banner {
-    background: rgba(239,68,68,0.08);
-    border: 1px solid rgba(239,68,68,0.3);
-    border-radius: 8px;
-    padding: 11px 14px;
-    margin-bottom: 16px;
-    display: flex;
-    gap: 8px;
-    font-size: 12px;
-    color: #fca5a5;
-    line-height: 1.5;
-  }
-  .alert-icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
-
-  .info-banner {
-    background: rgba(56,189,248,0.06);
-    border: 1px solid rgba(56,189,248,0.2);
-    border-radius: 8px;
-    padding: 11px 14px;
-    margin-bottom: 16px;
-    display: flex;
-    gap: 8px;
-    font-size: 12px;
-    color: var(--accent);
-    line-height: 1.5;
-  }
-
-  /* CHARTS */
-  .charts-row {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  @media (min-width: 700px) {
-    .charts-row { grid-template-columns: 1.6fr 1fr; }
-  }
-
-  .chart-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px;
-  }
-  .chart-title {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 12px;
-  }
-  .chart-wrap { position: relative; height: 180px; }
-
-  /* STYLIST CARDS - mobile-first card layout */
-  .stylist-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 20px;
-  }
-  .stylist-header {
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .stylist-title {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-  .stylist-note {
-    font-size: 10px;
-    color: var(--muted);
-    font-style: italic;
-  }
-
-  /* Mobile: card per stylist */
-  .stylist-cards { padding: 8px; display: flex; flex-direction: column; gap: 8px; }
-
-  .stylist-card {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-  }
-  .sc-name {
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: var(--text);
-  }
-  .sc-metrics {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-  .sc-metric { }
-  .sc-metric-label {
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 3px;
-  }
-
-  /* Desktop: table */
-  .stylist-table-wrap { display: none; }
-  @media (min-width: 700px) {
-    .stylist-cards { display: none; }
-    .stylist-table-wrap { display: block; }
-    table { width: 100%; border-collapse: collapse; }
-    th {
-      padding: 9px 14px;
-      font-size: 9px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface2);
-      white-space: nowrap;
-    }
-    th.right { text-align: right; }
-    td {
-      padding: 10px 14px;
-      font-size: 13px;
-      border-bottom: 1px solid rgba(42,47,58,0.6);
-      vertical-align: middle;
-    }
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: rgba(255,255,255,0.02); }
-    td.right { text-align: right; }
-    td.bold { font-weight: 500; }
-  }
-
-  .pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2px 7px;
-    border-radius: 4px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 500;
-    min-width: 48px;
-  }
-  .pill.green  { background: rgba(34,197,94,0.12);  color: #4ade80; }
-  .pill.yellow { background: rgba(245,158,11,0.12); color: #fbbf24; }
-  .pill.red    { background: rgba(239,68,68,0.12);  color: #f87171; }
-  .pill.blue   { background: rgba(56,189,248,0.12); color: #7dd3fc; }
-  .pill.gray   { background: rgba(122,128,153,0.12);color: var(--muted); }
+  .pill{display:inline-flex;align-items:center;justify-content:center;padding:2px 7px;border-radius:4px;font-family:var(--font-mono);font-size:11px;font-weight:500;min-width:48px}
+  .pill.green{background:rgba(34,197,94,.12);color:#4ade80}
+  .pill.yellow{background:rgba(245,158,11,.12);color:#fbbf24}
+  .pill.red{background:rgba(239,68,68,.12);color:#f87171}
+  .pill.gray{background:rgba(122,128,153,.12);color:var(--muted)}
 </style>
 </head>
 <body>
 
+<div id="loading"><div class="spinner"></div><p>Loading dashboard data...</p></div>
+
 <header>
   <div class="logo">
     <div class="logo-icon">GC</div>
-    <div>
-      <div class="logo-text">Performance Dashboard</div>
-      <div class="logo-sub">Owner View</div>
-    </div>
+    <div><div class="logo-text">Performance Dashboard</div><div class="logo-sub">Owner View</div></div>
   </div>
-  <div class="week-badge">03/20/2026</div>
+  <div class="week-badge" id="week-label">Loading...</div>
 </header>
 
-<div class="salon-tabs">
-  <button class="tab-btn active" onclick="showSalon('3800',this)">
-    <span class="tab-num">3800</span>Braden River
-  </button>
-  <button class="tab-btn" onclick="showSalon('3750',this)">
-    <span class="tab-num">3750</span>County Line
-  </button>
-  <button class="tab-btn" onclick="showSalon('3826',this)">
-    <span class="tab-num">3826</span>Kings Crossing
-  </button>
-  <button class="tab-btn" onclick="showSalon('4216',this)">
-    <span class="tab-num">4216</span>North River Ranch
-  </button>
-</div>
-
-<div class="main">
-
-  <!-- ===== 3800 BRADEN RIVER ===== -->
-  <div class="salon-panel active" id="panel-3800">
-    <div class="section-label">KPIs · Week of 3/20/2026</div>
-    <div class="kpi-row">
-      <div class="kpi-card" style="--accent-color:var(--green)">
-        <div class="kpi-label">Customers</div>
-        <div class="kpi-value">516</div>
-        <div class="kpi-sub"><span class="badge green">+32% YoY</span></div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--green)">
-        <div class="kpi-label">New Cust Return</div>
-        <div class="kpi-value">42.7<span>%</span></div>
-        <div class="kpi-sub"><span class="badge green">+16.8pts</span> sys 25.9%</div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--yellow)">
-        <div class="kpi-label">Repeat Return</div>
-        <div class="kpi-value">73.7<span>%</span></div>
-        <div class="kpi-sub"><span class="badge yellow">−0.9pts</span> sys 74.6%</div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--green)">
-        <div class="kpi-label">Cuts Per Hour</div>
-        <div class="kpi-value">2.65</div>
-        <div class="kpi-sub"><span class="badge green">+0.34</span> sys 2.31</div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--green)">
-        <div class="kpi-label">Avg Wait</div>
-        <div class="kpi-value">2.5<span> min</span></div>
-        <div class="kpi-sub"><span class="badge green">Excellent</span></div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--gc-blue)">
-        <div class="kpi-label">Avg HC Time</div>
-        <div class="kpi-value">14.4<span> min</span></div>
-        <div class="kpi-sub"><span class="badge blue">−0.7</span> sys 15.1</div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--gc-blue)">
-        <div class="kpi-label">New Cust %</div>
-        <div class="kpi-value">23.6<span>%</span></div>
-        <div class="kpi-sub">of total</div>
-      </div>
-    </div>
-
-    <div class="charts-row">
-      <div class="chart-card">
-        <div class="chart-title">Weekly Customer Count — Last 12 Weeks</div>
-        <div class="chart-wrap"><canvas id="trend-3800"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">New Cust Return % by Stylist</div>
-        <div class="chart-wrap"><canvas id="newret-3800"></canvas></div>
-      </div>
-    </div>
-
-    <div class="stylist-section">
-      <div class="stylist-header">
-        <div class="stylist-title">Stylist Performance · Braden River</div>
-        <div class="stylist-note">Return % = 8 wk avg</div>
-      </div>
-      <div class="stylist-cards" id="scards-3800"></div>
-      <div class="stylist-table-wrap">
-        <table><thead><tr>
-          <th>Stylist</th>
-          <th class="right">Custs</th>
-          <th class="right">New Return %</th>
-          <th class="right">Regular %</th>
-          <th class="right">CPH</th>
-          <th class="right">HC Time</th>
-        </tr></thead><tbody id="tbody-3800"></tbody></table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== 3750 COUNTY LINE ===== -->
-  <div class="salon-panel" id="panel-3750">
-    <div class="section-label">KPIs · Week of 3/20/2026</div>
-    <div class="kpi-row">
-      <div class="kpi-card" style="--accent-color:var(--green)">
-        <div class="kpi-label">Customers</div>
-        <div class="kpi-value">235</div>
-        <div class="kpi-sub"><span class="badge green">+23% YoY</span></div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--green)">
-        <div class="kpi-label">New Cust Return</div>
-        <div class="kpi-value">36.0<span>%</span></div>
-        <div class="kpi-sub"><span class="badge green">+10.1pts</span> sys 25.9%</div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--green)">
-        <div class="kpi-label">Repeat Return</div>
-        <div class="kpi-value">79.1<span>%</span></div>
-        <div class="kpi-sub"><span class="badge green">+4.5pts</span> sys 74.6%</div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--red)">
-        <div class="kpi-label">Cuts Per Hour</div>
-        <div class="kpi-value">1.71</div>
-        <div class="kpi-sub"><span class="badge red">−0.60</span> sys 2.31</div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--green)">
-        <div class="kpi-label">Avg Wait</div>
-        <div class="kpi-value">4.1<span> min</span></div>
-        <div class="kpi-sub"><span class="badge green">Good</span></div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--green)">
-        <div class="kpi-label">Avg HC Time</div>
-        <div class="kpi-value">14.2<span> min</span></div>
-        <div class="kpi-sub"><span class="badge blue">−0.9</span> sys 15.1</div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--gc-blue)">
-        <div class="kpi-label">New Cust %</div>
-        <div class="kpi-value">22.6<span>%</span></div>
-        <div class="kpi-sub">of total</div>
-      </div>
-    </div>
-
-    <div class="alert-banner">
-      <span class="alert-icon">⚠</span>
-      <span><strong>CPH Alert:</strong> County Line CPH of 1.71 is well below the system average of 2.31. Strong retention metrics — but slow throughput is capping customer count growth.</span>
-    </div>
-
-    <div class="charts-row">
-      <div class="chart-card">
-        <div class="chart-title">Weekly Customer Count — Last 12 Weeks</div>
-        <div class="chart-wrap"><canvas id="trend-3750"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">New Cust Return % by Stylist</div>
-        <div class="chart-wrap"><canvas id="newret-3750"></canvas></div>
-      </div>
-    </div>
-
-    <div class="stylist-section">
-      <div class="stylist-header">
-        <div class="stylist-title">Stylist Performance · County Line</div>
-        <div class="stylist-note">Return % = 8 wk avg</div>
-      </div>
-      <div class="stylist-cards" id="scards-3750"></div>
-      <div class="stylist-table-wrap">
-        <table><thead><tr>
-          <th>Stylist</th>
-          <th class="right">Custs</th>
-          <th class="right">New Return %</th>
-          <th class="right">Regular %</th>
-          <th class="right">CPH</th>
-          <th class="right">HC Time</th>
-        </tr></thead><tbody id="tbody-3750"></tbody></table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== 3826 KINGS CROSSING ===== -->
-  <div class="salon-panel" id="panel-3826">
-    <div class="section-label">KPIs · Week of 3/20/2026</div>
-    <div class="kpi-row">
-      <div class="kpi-card" style="--accent-color:var(--green)">
-        <div class="kpi-label">Customers</div>
-        <div class="kpi-value">465</div>
-        <div class="kpi-sub"><span class="badge green">+11% YoY</span></div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--yellow)">
-        <div class="kpi-label">New Cust Return</div>
-        <div class="kpi-value">28.0<span>%</span></div>
-        <div class="kpi-sub"><span class="badge yellow">+2.1pts</span> sys 25.9%</div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--green)">
-        <div class="kpi-label">Repeat Return</div>
-        <div class="kpi-value">78.1<span>%</span></div>
-        <div class="kpi-sub"><span class="badge green">+3.5pts</span> sys 74.6%</div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--green)">
-        <div class="kpi-label">Cuts Per Hour</div>
-        <div class="kpi-value">2.39</div>
-        <div class="kpi-sub"><span class="badge green">+0.08</span> sys 2.31</div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--red)">
-        <div class="kpi-label">Avg Wait</div>
-        <div class="kpi-value">18.0<span> min</span></div>
-        <div class="kpi-sub"><span class="badge red">Critical</span></div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--red)">
-        <div class="kpi-label">Avg HC Time</div>
-        <div class="kpi-value">18.4<span> min</span></div>
-        <div class="kpi-sub"><span class="badge red">+3.3</span> sys 15.1</div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--gc-blue)">
-        <div class="kpi-label">New Cust %</div>
-        <div class="kpi-value">17.6<span>%</span></div>
-        <div class="kpi-sub">of total</div>
-      </div>
-    </div>
-
-    <div class="alert-banner">
-      <span class="alert-icon">🚨</span>
-      <span><strong>Wait Time Alert:</strong> 18-min avg wait is nearly 3× the system average. High HC times across the team are the primary driver — this is losing walk-ins before they can build loyalty.</span>
-    </div>
-
-    <div class="charts-row">
-      <div class="chart-card">
-        <div class="chart-title">Weekly Customer Count — Last 12 Weeks</div>
-        <div class="chart-wrap"><canvas id="trend-3826"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">New Cust Return % by Stylist</div>
-        <div class="chart-wrap"><canvas id="newret-3826"></canvas></div>
-      </div>
-    </div>
-
-    <div class="stylist-section">
-      <div class="stylist-header">
-        <div class="stylist-title">Stylist Performance · Kings Crossing</div>
-        <div class="stylist-note">Return % = 8 wk avg</div>
-      </div>
-      <div class="stylist-cards" id="scards-3826"></div>
-      <div class="stylist-table-wrap">
-        <table><thead><tr>
-          <th>Stylist</th>
-          <th class="right">Custs</th>
-          <th class="right">New Return %</th>
-          <th class="right">Regular %</th>
-          <th class="right">CPH</th>
-          <th class="right">HC Time</th>
-        </tr></thead><tbody id="tbody-3826"></tbody></table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== 4216 NORTH RIVER RANCH ===== -->
-  <div class="salon-panel" id="panel-4216">
-    <div class="info-banner">
-      <span>ℹ</span>
-      <span><strong>New Salon:</strong> Customer return data not yet available — requires ~15 weeks of history. New customer % of 48.4% is expected for a new location still building its base.</span>
-    </div>
-    <div class="section-label">KPIs · Week of 3/20/2026</div>
-    <div class="kpi-row">
-      <div class="kpi-card" style="--accent-color:var(--gc-blue)">
-        <div class="kpi-label">Customers</div>
-        <div class="kpi-value">277</div>
-        <div class="kpi-sub">sys avg 438</div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--yellow)">
-        <div class="kpi-label">New Cust Return</div>
-        <div class="kpi-value">—</div>
-        <div class="kpi-sub">not yet available</div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--yellow)">
-        <div class="kpi-label">Repeat Return</div>
-        <div class="kpi-value">—</div>
-        <div class="kpi-sub">not yet available</div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--yellow)">
-        <div class="kpi-label">Cuts Per Hour</div>
-        <div class="kpi-value">1.92</div>
-        <div class="kpi-sub"><span class="badge yellow">−0.39</span> sys 2.31</div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--green)">
-        <div class="kpi-label">Avg Wait</div>
-        <div class="kpi-value">5.1<span> min</span></div>
-        <div class="kpi-sub"><span class="badge green">Below avg</span></div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--yellow)">
-        <div class="kpi-label">Avg HC Time</div>
-        <div class="kpi-value">16.9<span> min</span></div>
-        <div class="kpi-sub"><span class="badge yellow">+1.8</span> sys 15.1</div>
-      </div>
-      <div class="kpi-card" style="--accent-color:var(--orange)">
-        <div class="kpi-label">New Cust %</div>
-        <div class="kpi-value">48.4<span>%</span></div>
-        <div class="kpi-sub">expected — new location</div>
-      </div>
-    </div>
-
-    <div class="charts-row">
-      <div class="chart-card">
-        <div class="chart-title">Weekly Customer Count — Last 12 Weeks</div>
-        <div class="chart-wrap"><canvas id="trend-4216"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="chart-title">CPH by Stylist — Current Week</div>
-        <div class="chart-wrap"><canvas id="cph-4216"></canvas></div>
-      </div>
-    </div>
-
-    <div class="stylist-section">
-      <div class="stylist-header">
-        <div class="stylist-title">Stylist Performance · North River Ranch</div>
-        <div class="stylist-note">CPH & HC Time = current week</div>
-      </div>
-      <div class="stylist-cards" id="scards-4216"></div>
-      <div class="stylist-table-wrap">
-        <table><thead><tr>
-          <th>Stylist</th>
-          <th class="right">Custs</th>
-          <th class="right">New Return %</th>
-          <th class="right">Regular %</th>
-          <th class="right">CPH</th>
-          <th class="right">HC Time</th>
-        </tr></thead><tbody id="tbody-4216"></tbody></table>
-      </div>
-    </div>
-  </div>
-
-</div>
+<div class="salon-tabs" id="salon-tabs"></div>
+<div class="main" id="main-content"></div>
 
 <script>
-const BENCH = {avg_cust:438,avg_cph:2.306,avg_hc_time:15.06,avg_new_return:25.9,avg_repeat_return:74.6};
-
-const TREND = {
-  "3750":{"dates":["12/26","01/02","01/09","01/16","01/23","01/30","02/06","02/13","02/20","02/27","03/06","03/13","03/20"],"counts":[249,184,246,237,231,234,226,248,216,218,236,209,235]},
-  "3800":{"dates":["12/26","01/02","01/09","01/16","01/23","01/30","02/06","02/13","02/20","02/27","03/06","03/13","03/20"],"counts":[369,340,500,486,517,419,425,497,524,461,501,535,516]},
-  "3826":{"dates":["12/26","01/02","01/09","01/16","01/23","01/30","02/06","02/13","02/20","02/27","03/06","03/13","03/20"],"counts":[395,338,502,477,497,429,415,477,507,461,457,489,465]},
-  "4216":{"dates":["12/26","01/02","01/09","01/16","01/23","01/30","02/06","02/13","02/20","02/27","03/06","03/13","03/20"],"counts":[340,265,324,258,255,275,250,240,277,260,249,283,277]}
-};
-
-const STYLISTS = {
-  "3800":[
-    {name:"Baczewski, Ewa",new_return:60.0,reg_pct:92.3,cph:2.5,hc_time:16.8,cust_count:64},
-    {name:"Felch, Michele",new_return:32.1,reg_pct:77.6,cph:2.1,hc_time:17.1,cust_count:38},
-    {name:"Gannon, Donna M",new_return:35.9,reg_pct:77.4,cph:2.8,hc_time:13.1,cust_count:109},
-    {name:"Laport, Lisa",new_return:39.1,reg_pct:76.9,cph:3.0,hc_time:12.9,cust_count:128},
-    {name:"Goodwin, Patricia",new_return:31.2,reg_pct:76.2,cph:2.5,hc_time:13.0,cust_count:55},
-    {name:"Stachowski, Michaela V",new_return:25.0,reg_pct:67.2,cph:2.7,hc_time:14.9,cust_count:101},
-    {name:"Rivas, Veronica",new_return:null,reg_pct:null,cph:1.8,hc_time:20.7,cust_count:21}
-  ],
-  "3750":[
-    {name:"Rodriguez Santana, Gabrielly",new_return:29.4,reg_pct:77.6,cph:1.7,hc_time:17.3,cust_count:11},
-    {name:"Jaquez, Lizbeth",new_return:28.2,reg_pct:77.4,cph:2.2,hc_time:13.8,cust_count:47},
-    {name:"Sargent, Anita M",new_return:31.0,reg_pct:75.4,cph:2.0,hc_time:10.9,cust_count:32},
-    {name:"Garcia Rodriguez, Rut E",new_return:33.3,reg_pct:73.4,cph:1.3,hc_time:15.2,cust_count:20},
-    {name:"Colding, Amber",new_return:33.9,reg_pct:71.4,cph:1.9,hc_time:11.3,cust_count:24},
-    {name:"Fulmore, James B",new_return:26.1,reg_pct:71.2,cph:1.6,hc_time:14.3,cust_count:48},
-    {name:"Sutherland, Elyssa",new_return:24.6,reg_pct:70.4,cph:1.5,hc_time:17.2,cust_count:53}
-  ],
-  "3826":[
-    {name:"Schwickrath, Taylor",new_return:29.6,reg_pct:87.8,cph:2.7,hc_time:15.8,cust_count:90},
-    {name:"Rosario, Maria V",new_return:44.3,reg_pct:87.6,cph:2.5,hc_time:20.9,cust_count:95},
-    {name:"Fontanez, Brittany",new_return:25.0,reg_pct:81.7,cph:2.7,hc_time:17.7,cust_count:57},
-    {name:"Curry, Kim",new_return:16.1,reg_pct:80.7,cph:2.3,hc_time:17.0,cust_count:31},
-    {name:"Spadafora, Gail",new_return:22.3,reg_pct:79.7,cph:2.2,hc_time:17.0,cust_count:68},
-    {name:"Gibbons, Hope",new_return:26.2,reg_pct:78.2,cph:2.7,hc_time:17.8,cust_count:47},
-    {name:"Dorris, Christopher",new_return:null,reg_pct:null,cph:1.9,hc_time:18.9,cust_count:39},
-    {name:"Mosier, Carey",new_return:null,reg_pct:null,cph:1.8,hc_time:23.5,cust_count:38}
-  ],
-  "4216":[
-    {name:"Epps, Cristy L",new_return:null,reg_pct:null,cph:2.4,hc_time:14.6,cust_count:65},
-    {name:"Burt, Becky",new_return:null,reg_pct:null,cph:2.2,hc_time:16.1,cust_count:69},
-    {name:"Mcnutt, Christine",new_return:null,reg_pct:null,cph:2.2,hc_time:15.4,cust_count:31},
-    {name:"Mcduffie, Ingram",new_return:null,reg_pct:null,cph:1.8,hc_time:15.8,cust_count:53},
-    {name:"Gibbons, Hope",new_return:null,reg_pct:null,cph:1.7,hc_time:18.6,cust_count:31},
-    {name:"Madison, Ricardo D",new_return:null,reg_pct:null,cph:1.1,hc_time:26.2,cust_count:28}
-  ]
-};
-
-// Pill helpers
-function newRetPill(v) {
-  if (v===null) return '<span class="pill gray">—</span>';
-  const cls = v>=35?'green':v>=25?'yellow':'red';
-  return `<span class="pill ${cls}">${v.toFixed(1)}%</span>`;
+// ── Pill helpers ──────────────────────────────────────────────────────────────
+function pill(v,lo,hi,fmt,invert){
+  if(v===null||v===undefined) return '<span class="pill gray">—</span>';
+  let cls;
+  if(invert) cls=v<=lo?'green':v<=hi?'yellow':'red';
+  else       cls=v>=hi?'green':v>=lo?'yellow':'red';
+  return `<span class="pill ${cls}">${fmt(v)}</span>`;
 }
-function regPctPill(v) {
-  if (v===null) return '<span class="pill gray">—</span>';
-  const cls = v>=78?'green':v>=72?'yellow':'red';
-  return `<span class="pill ${cls}">${v.toFixed(1)}%</span>`;
-}
-function cphPill(v) {
-  if (v===null) return '<span class="pill gray">—</span>';
-  const cls = v>=2.2?'green':v>=1.8?'yellow':'red';
-  return `<span class="pill ${cls}">${v.toFixed(1)}</span>`;
-}
-function hcPill(v) {
-  if (v===null) return '<span class="pill gray">—</span>';
-  const cls = v<=15?'green':v<=18?'yellow':'red';
-  return `<span class="pill ${cls}">${v.toFixed(1)}m</span>`;
+const pct1=v=>v.toFixed(1)+'%';
+const fix1=v=>v.toFixed(1);
+const fixm=v=>v.toFixed(1)+'m';
+const newRetPill=v=>pill(v,25,35,pct1,false);
+const regPctPill=v=>pill(v,72,78,pct1,false);
+const cphPill=v=>pill(v,1.8,2.2,fix1,false);
+const hcPill=v=>pill(v,15,18,fixm,true);
+
+function diffBadge(val,bench,higherBetter,suffix){
+  if(val===null||val===undefined||bench===null) return '';
+  suffix=suffix||'';
+  const diff=val-bench, sign=diff>=0?'+':'';
+  const cls=(diff>=0)===higherBetter?'green':'red';
+  return `<span class="badge ${cls}">${sign}${diff.toFixed(1)}${suffix}</span>`;
 }
 
-// Render mobile cards
-function renderCards(salonNum) {
-  const container = document.getElementById('scards-' + salonNum);
-  if (!container) return;
-  container.innerHTML = STYLISTS[salonNum].map(s => `
+// ── Build panel HTML ──────────────────────────────────────────────────────────
+function buildPanel(snum,data){
+  const kpi=data.kpis[snum]||{}, b=data.bench;
+  const stylists=data.stylists[snum]||[];
+  const name=data.salon_names[snum];
+  const isNew=snum==='4216';
+
+  const yoyBadge=kpi.yoy!==null&&kpi.yoy!==undefined
+    ?`<span class="badge ${kpi.yoy>=0?'green':'red'}">${kpi.yoy>=0?'+':''}${kpi.yoy}% YoY</span>`
+    :'<span class="badge blue">New Salon</span>';
+
+  let alert='';
+  if(snum==='3750'&&kpi.cph&&kpi.cph<1.9)
+    alert=`<div class="alert-banner"><span class="alert-icon">⚠</span><span><strong>CPH Alert:</strong> County Line CPH of ${kpi.cph} is well below the system average of ${b.avg_cph}. Strong retention — but slow throughput is capping growth.</span></div>`;
+  if(snum==='3826'&&kpi.avg_wait&&kpi.avg_wait>10)
+    alert=`<div class="alert-banner"><span class="alert-icon">🚨</span><span><strong>Wait Time Alert:</strong> ${kpi.avg_wait}-min avg wait is ${(kpi.avg_wait/b.avg_wait).toFixed(1)}× the system average. High HC times are driving customers away before they build loyalty.</span></div>`;
+  if(isNew)
+    alert=`<div class="info-banner"><span class="alert-icon">ℹ</span><span><strong>New Salon:</strong> Customer return data not yet available — requires ~15 weeks of history. New customer % of ${kpi.new_cust_pct}% is expected for a new location still building its base.</span></div>`;
+
+  const waitColor=kpi.avg_wait<=5?'var(--green)':kpi.avg_wait<=10?'var(--yellow)':'var(--red)';
+  const waitBadge=kpi.avg_wait<=5?'<span class="badge green">Excellent</span>':kpi.avg_wait<=10?'<span class="badge yellow">Elevated</span>':'<span class="badge red">Critical</span>';
+
+  const kpiCards=`
+    <div class="kpi-card" style="--accent-color:${(kpi.yoy||0)>=10?'var(--green)':'var(--gc-blue)'}">
+      <div class="kpi-label">Customers</div><div class="kpi-value">${kpi.cust||'—'}</div>
+      <div class="kpi-sub">${yoyBadge}</div></div>
+    <div class="kpi-card" style="--accent-color:${(kpi.new_return||0)>=35?'var(--green)':(kpi.new_return||0)>=25?'var(--yellow)':'var(--red)'}">
+      <div class="kpi-label">New Cust Return</div>
+      <div class="kpi-value">${kpi.new_return!==null&&kpi.new_return!==undefined?kpi.new_return+'<span>%</span>':'<span style="font-size:16px">—</span>'}</div>
+      <div class="kpi-sub">${kpi.new_return!==null&&kpi.new_return!==undefined?diffBadge(kpi.new_return,b.avg_new_return,true,'pts')+' sys '+b.avg_new_return+'%':'not yet available'}</div></div>
+    <div class="kpi-card" style="--accent-color:${(kpi.repeat_return||0)>=75?'var(--green)':'var(--yellow)'}">
+      <div class="kpi-label">Repeat Return</div>
+      <div class="kpi-value">${kpi.repeat_return!==null&&kpi.repeat_return!==undefined?kpi.repeat_return+'<span>%</span>':'<span style="font-size:16px">—</span>'}</div>
+      <div class="kpi-sub">${kpi.repeat_return!==null&&kpi.repeat_return!==undefined?diffBadge(kpi.repeat_return,b.avg_repeat_return,true,'pts')+' sys '+b.avg_repeat_return+'%':'not yet available'}</div></div>
+    <div class="kpi-card" style="--accent-color:${(kpi.cph||0)>=(b.avg_cph||2)?'var(--green)':'var(--red)'}">
+      <div class="kpi-label">Cuts Per Hour</div><div class="kpi-value">${kpi.cph||'—'}</div>
+      <div class="kpi-sub">${diffBadge(kpi.cph,b.avg_cph,true)} sys ${b.avg_cph}</div></div>
+    <div class="kpi-card" style="--accent-color:${waitColor}">
+      <div class="kpi-label">Avg Wait</div><div class="kpi-value">${kpi.avg_wait}<span> min</span></div>
+      <div class="kpi-sub">${waitBadge} sys ${b.avg_wait}m</div></div>
+    <div class="kpi-card" style="--accent-color:${(kpi.hc_time||99)<=(b.avg_hc_time||15)?'var(--green)':'var(--yellow)'}">
+      <div class="kpi-label">Avg HC Time</div><div class="kpi-value">${kpi.hc_time}<span> min</span></div>
+      <div class="kpi-sub">${diffBadge(kpi.hc_time,b.avg_hc_time,false)} sys ${b.avg_hc_time}</div></div>
+    <div class="kpi-card" style="--accent-color:var(--gc-blue)">
+      <div class="kpi-label">New Cust %</div><div class="kpi-value">${kpi.new_cust_pct}<span>%</span></div>
+      <div class="kpi-sub">of total customers</div></div>`;
+
+  const stylistCards=stylists.map(s=>`
     <div class="stylist-card">
       <div class="sc-name">${s.name}</div>
       <div class="sc-metrics">
-        <div class="sc-metric">
-          <div class="sc-metric-label">New Return %</div>
-          ${newRetPill(s.new_return)}
-        </div>
-        <div class="sc-metric">
-          <div class="sc-metric-label">Regular Cust %</div>
-          ${regPctPill(s.reg_pct)}
-        </div>
-        <div class="sc-metric">
-          <div class="sc-metric-label">CPH</div>
-          ${cphPill(s.cph)}
-        </div>
-        <div class="sc-metric">
-          <div class="sc-metric-label">HC Time</div>
-          ${hcPill(s.hc_time)}
-        </div>
-      </div>
-    </div>
-  `).join('');
-}
+        <div><div class="sc-metric-label">New Return %</div>${newRetPill(s.new_return)}</div>
+        <div><div class="sc-metric-label">Regular Cust %</div>${regPctPill(s.reg_pct)}</div>
+        <div><div class="sc-metric-label">CPH</div>${cphPill(s.cph)}</div>
+        <div><div class="sc-metric-label">HC Time</div>${hcPill(s.hc_time)}</div>
+      </div></div>`).join('');
 
-// Render desktop table
-function renderTable(salonNum) {
-  const tbody = document.getElementById('tbody-' + salonNum);
-  if (!tbody) return;
-  tbody.innerHTML = STYLISTS[salonNum].map(s => `
+  const stylistRows=stylists.map(s=>`
     <tr>
       <td class="bold">${s.name}</td>
       <td class="right" style="font-family:var(--font-mono);font-size:12px">${s.cust_count>0?s.cust_count:'—'}</td>
@@ -791,120 +190,123 @@ function renderTable(salonNum) {
       <td class="right">${regPctPill(s.reg_pct)}</td>
       <td class="right">${cphPill(s.cph)}</td>
       <td class="right">${hcPill(s.hc_time)}</td>
-    </tr>
-  `).join('');
+    </tr>`).join('');
+
+  return `
+  <div class="salon-panel" id="panel-${snum}">
+    ${alert}
+    <div class="section-label">KPIs · Week of ${data.week_label}</div>
+    <div class="kpi-row">${kpiCards}</div>
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Weekly Customer Count — Last 12 Weeks</div>
+        <div class="chart-wrap"><canvas id="trend-${snum}"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">${isNew?'CPH by Stylist — Current Week':'New Cust Return % by Stylist'}</div>
+        <div class="chart-wrap"><canvas id="${isNew?'cph':'newret'}-${snum}"></canvas></div>
+      </div>
+    </div>
+    <div class="stylist-section">
+      <div class="stylist-header">
+        <div class="stylist-title">Stylist Performance · ${name}</div>
+        <div class="stylist-note">${isNew?'CPH & HC Time = current week':'Return % = 8 wk avg'}</div>
+      </div>
+      <div class="stylist-cards">${stylistCards}</div>
+      <div class="stylist-table-wrap">
+        <table><thead><tr>
+          <th>Stylist</th><th class="right">Custs</th>
+          <th class="right">New Return %</th><th class="right">Regular %</th>
+          <th class="right">CPH</th><th class="right">HC Time</th>
+        </tr></thead><tbody>${stylistRows}</tbody></table>
+      </div>
+    </div>
+  </div>`;
 }
 
-// Charts
-const charts = {};
-const chartDefaults = {
-  responsive: true, maintainAspectRatio: false,
-  plugins: { legend: { display: false } },
-};
-
-const benchPlugin = (val, color='rgba(255,165,50,0.65)') => ({
-  id: 'bl' + Math.random(),
-  afterDraw(c) {
-    const {ctx, scales:{y}} = c;
-    if (!y) return;
-    const yp = y.getPixelForValue(val);
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(c.chartArea.left, yp);
-    ctx.lineTo(c.chartArea.right, yp);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([4,3]);
-    ctx.stroke();
-    ctx.restore();
+// ── Charts ────────────────────────────────────────────────────────────────────
+const charts={};
+const benchLine=(val,color)=>({
+  id:'bl'+Math.random(),
+  afterDraw(c){
+    const{ctx,scales:{y}}=c;if(!y)return;
+    const yp=y.getPixelForValue(val);
+    ctx.save();ctx.beginPath();
+    ctx.moveTo(c.chartArea.left,yp);ctx.lineTo(c.chartArea.right,yp);
+    ctx.strokeStyle=color||'rgba(255,165,50,0.65)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+    ctx.stroke();ctx.restore();
   }
 });
+const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}};
+const xt={color:'#7a8099',font:{family:'DM Mono',size:9}};
+const gc='rgba(255,255,255,0.04)';
 
-function makeTrend(id, snum) {
-  const el = document.getElementById(id);
-  if (!el || charts[id]) return;
-  const d = TREND[snum];
-  charts[id] = new Chart(el, {
-    type: 'line',
-    data: { labels: d.dates, datasets: [{
-      data: d.counts,
-      borderColor: 'rgba(56,189,248,1)',
-      backgroundColor: 'rgba(56,189,248,0.07)',
-      borderWidth: 2,
-      pointRadius: 2.5,
-      pointBackgroundColor: 'rgba(56,189,248,1)',
-      tension: 0.3, fill: true
-    }]},
-    options: { ...chartDefaults,
-      scales: {
-        x: { grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#7a8099',font:{family:'DM Mono',size:9}} },
-        y: { grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#7a8099',font:{family:'DM Mono',size:9}},
-          suggestedMin: Math.min(...d.counts)*0.88 }
-      },
-      plugins: { ...chartDefaults.plugins, tooltip:{callbacks:{label:c=>' '+c.parsed.y+' custs'}} }
-    },
-    plugins: [benchPlugin(BENCH.avg_cust)]
-  });
+function makeTrend(id,snum,data){
+  const el=document.getElementById(id);if(!el||charts[id])return;
+  const d=data.trend[snum];
+  charts[id]=new Chart(el,{type:'line',
+    data:{labels:d.dates,datasets:[{data:d.counts,borderColor:'rgba(56,189,248,1)',backgroundColor:'rgba(56,189,248,0.07)',borderWidth:2,pointRadius:2.5,pointBackgroundColor:'rgba(56,189,248,1)',tension:0.3,fill:true}]},
+    options:{...base,scales:{x:{grid:{color:gc},ticks:xt},y:{grid:{color:gc},ticks:xt,suggestedMin:Math.min(...d.counts)*0.88}},plugins:{...base.plugins,tooltip:{callbacks:{label:c=>' '+c.parsed.y+' custs'}}}},
+    plugins:[benchLine(data.bench.avg_cust)]});
+}
+function makeNewRet(id,snum,data){
+  const el=document.getElementById(id);if(!el||charts[id])return;
+  const rows=data.stylists[snum].filter(s=>s.new_return!==null);
+  const vals=rows.map(s=>s.new_return);
+  const colors=vals.map(v=>v>=35?'rgba(34,197,94,0.7)':v>=25?'rgba(245,158,11,0.7)':'rgba(239,68,68,0.7)');
+  charts[id]=new Chart(el,{type:'bar',
+    data:{labels:rows.map(s=>s.name.split(',')[0]),datasets:[{data:vals,backgroundColor:colors,borderRadius:3,borderSkipped:false}]},
+    options:{...base,indexAxis:'y',scales:{x:{grid:{color:gc},ticks:{...xt,callback:v=>v+'%'},max:70},y:{grid:{display:false},ticks:{color:'#e8eaf0',font:{family:'DM Sans',size:10}}}},plugins:{...base.plugins,tooltip:{callbacks:{label:c=>' '+c.parsed.x.toFixed(1)+'%'}}}},
+    plugins:[benchLine(data.bench.avg_new_return,'rgba(255,100,100,0.6)')]});
+}
+function makeCPH(id,snum,data){
+  const el=document.getElementById(id);if(!el||charts[id])return;
+  const rows=data.stylists[snum].filter(s=>s.cph!==null&&s.cust_count>0);
+  const vals=rows.map(s=>s.cph);
+  const colors=vals.map(v=>v>=2.2?'rgba(34,197,94,0.7)':v>=1.8?'rgba(245,158,11,0.7)':'rgba(239,68,68,0.7)');
+  charts[id]=new Chart(el,{type:'bar',
+    data:{labels:rows.map(s=>s.name.split(',')[0]),datasets:[{data:vals,backgroundColor:colors,borderRadius:3}]},
+    options:{...base,indexAxis:'y',scales:{x:{grid:{color:gc},ticks:xt},y:{grid:{display:false},ticks:{color:'#e8eaf0',font:{family:'DM Sans',size:10}}}},plugins:{...base.plugins,tooltip:{callbacks:{label:c=>' '+c.parsed.x.toFixed(2)+' CPH'}}}},
+    plugins:[benchLine(data.bench.avg_cph,'rgba(255,100,100,0.6)')]});
 }
 
-function makeNewRet(id, snum) {
-  const el = document.getElementById(id);
-  if (!el || charts[id]) return;
-  const data = STYLISTS[snum].filter(s => s.new_return !== null);
-  const labels = data.map(s => s.name.split(',')[0]);
-  const vals = data.map(s => s.new_return);
-  const colors = vals.map(v => v>=35?'rgba(34,197,94,0.7)':v>=25?'rgba(245,158,11,0.7)':'rgba(239,68,68,0.7)');
-  charts[id] = new Chart(el, {
-    type: 'bar',
-    data: { labels, datasets: [{data:vals, backgroundColor:colors, borderRadius:3, borderSkipped:false}] },
-    options: { ...chartDefaults, indexAxis:'y',
-      scales: {
-        x: { grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#7a8099',font:{family:'DM Mono',size:9},callback:v=>v+'%'}, max:70 },
-        y: { grid:{display:false}, ticks:{color:'#e8eaf0',font:{family:'DM Sans',size:10}} }
-      },
-      plugins: { ...chartDefaults.plugins, tooltip:{callbacks:{label:c=>' '+c.parsed.x.toFixed(1)+'%'}} }
-    },
-    plugins: [benchPlugin(BENCH.avg_new_return,'rgba(255,100,100,0.6)')]
-  });
+function initCharts(snum,data){
+  if(snum==='4216'){makeTrend('trend-4216','4216',data);makeCPH('cph-4216','4216',data);}
+  else{makeTrend('trend-'+snum,snum,data);makeNewRet('newret-'+snum,snum,data);}
 }
 
-function makeCPH(id, snum) {
-  const el = document.getElementById(id);
-  if (!el || charts[id]) return;
-  const data = STYLISTS[snum].filter(s => s.cph!==null && s.cust_count>0);
-  const labels = data.map(s => s.name.split(',')[0]);
-  const vals = data.map(s => s.cph);
-  const colors = vals.map(v => v>=2.2?'rgba(34,197,94,0.7)':v>=1.8?'rgba(245,158,11,0.7)':'rgba(239,68,68,0.7)');
-  charts[id] = new Chart(el, {
-    type: 'bar',
-    data: { labels, datasets: [{data:vals, backgroundColor:colors, borderRadius:3}] },
-    options: { ...chartDefaults, indexAxis:'y',
-      scales: {
-        x: { grid:{color:'rgba(255,255,255,0.04)'}, ticks:{color:'#7a8099',font:{family:'DM Mono',size:9}} },
-        y: { grid:{display:false}, ticks:{color:'#e8eaf0',font:{family:'DM Sans',size:10}} }
-      },
-      plugins: { ...chartDefaults.plugins, tooltip:{callbacks:{label:c=>' '+c.parsed.x.toFixed(2)+' CPH'}} }
-    },
-    plugins: [benchPlugin(BENCH.avg_cph,'rgba(255,100,100,0.6)')]
-  });
-}
-
-function showSalon(num, btn) {
+let appData=null;
+function showSalon(snum,btn){
   document.querySelectorAll('.salon-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('panel-'+num).classList.add('active');
+  document.getElementById('panel-'+snum).classList.add('active');
   btn.classList.add('active');
-  setTimeout(() => {
-    if (num==='4216') { makeTrend('trend-4216','4216'); makeCPH('cph-4216','4216'); }
-    else { makeTrend('trend-'+num,num); makeNewRet('newret-'+num,num); }
-  }, 50);
+  setTimeout(()=>initCharts(snum,appData),50);
 }
 
-window.addEventListener('load', () => {
-  ['3800','3750','3826','4216'].forEach(n => { renderCards(n); renderTable(n); });
-  makeTrend('trend-3800','3800');
-  makeNewRet('newret-3800','3800');
-});
+// ── Boot ──────────────────────────────────────────────────────────────────────
+fetch('data.json?v='+Date.now())
+  .then(r=>{if(!r.ok)throw new Error('Could not load data.json');return r.json();})
+  .then(data=>{
+    appData=data;
+    const salons=['3800','3750','3826','4216'];
+    const names=data.salon_names||{'3800':'Braden River','3750':'County Line','3826':'Kings Crossing','4216':'North River Ranch'};
+    document.getElementById('salon-tabs').innerHTML=salons.map((s,i)=>
+      `<button class="tab-btn ${i===0?'active':''}" onclick="showSalon('${s}',this)"><span class="tab-num">${s}</span>${names[s]}</button>`).join('');
+    document.getElementById('main-content').innerHTML=salons.map(s=>buildPanel(s,data)).join('');
+    document.getElementById('week-label').textContent=data.week_label;
+    document.getElementById('loading').style.display='none';
+    initCharts('3800',data);
+  })
+  .catch(err=>{
+    document.getElementById('loading').innerHTML=`
+      <div style="text-align:center;padding:32px;color:#f87171">
+        <div style="font-size:32px;margin-bottom:12px">⚠</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:8px">Could not load dashboard data</div>
+        <div style="font-size:12px;color:#7a8099">${err.message}</div>
+        <div style="font-size:12px;color:#7a8099;margin-top:8px">Make sure data.json is in the same folder as index.html</div>
+      </div>`;
+  });
 </script>
 </body>
 </html>
