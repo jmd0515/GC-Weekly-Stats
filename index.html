@@ -147,10 +147,16 @@ function buildPanel(snum,data){
   const waitColor=kpi.avg_wait<=5?'var(--green)':kpi.avg_wait<=10?'var(--yellow)':'var(--red)';
   const waitBadge=kpi.avg_wait<=5?'<span class="badge green">Excellent</span>':kpi.avg_wait<=10?'<span class="badge yellow">Elevated</span>':'<span class="badge red">Critical</span>';
 
+  const rankColor = kpi.rank && kpi.rank<=25?'var(--green)':kpi.rank<=50?'var(--yellow)':'var(--red)';
+  const rankBadge = kpi.rank ? `<span class="badge ${kpi.rank<=25?'green':kpi.rank<=50?'yellow':'red'}">#${kpi.rank} of ${b.total_salons}</span>` : '<span class="badge blue">New Salon</span>';
+
   const kpiCards=`
     <div class="kpi-card" style="--accent-color:${(kpi.yoy||0)>=10?'var(--green)':'var(--gc-blue)'}">
       <div class="kpi-label">Customers</div><div class="kpi-value">${kpi.cust||'—'}</div>
-      <div class="kpi-sub">${yoyBadge}</div></div>
+      <div class="kpi-sub">${yoyBadge} ${rankBadge}</div></div>
+    <div class="kpi-card" style="--accent-color:var(--green)">
+      <div class="kpi-label">New Customers</div><div class="kpi-value">${kpi.new_cust||'—'}</div>
+      <div class="kpi-sub">${kpi.new_cust_pct}% of total this week</div></div>
     <div class="kpi-card" style="--accent-color:${(kpi.new_return||0)>=35?'var(--green)':(kpi.new_return||0)>=25?'var(--yellow)':'var(--red)'}">
       <div class="kpi-label">New Cust Return</div>
       <div class="kpi-value">${kpi.new_return!==null&&kpi.new_return!==undefined?kpi.new_return+'<span>%</span>':'<span style="font-size:16px">—</span>'}</div>
@@ -167,10 +173,7 @@ function buildPanel(snum,data){
       <div class="kpi-sub">${waitBadge} sys ${b.avg_wait}m</div></div>
     <div class="kpi-card" style="--accent-color:${(kpi.hc_time||99)<=(b.avg_hc_time||15)?'var(--green)':'var(--yellow)'}">
       <div class="kpi-label">Avg HC Time</div><div class="kpi-value">${kpi.hc_time}<span> min</span></div>
-      <div class="kpi-sub">${diffBadge(kpi.hc_time,b.avg_hc_time,false)} sys ${b.avg_hc_time}</div></div>
-    <div class="kpi-card" style="--accent-color:var(--gc-blue)">
-      <div class="kpi-label">New Cust %</div><div class="kpi-value">${kpi.new_cust_pct}<span>%</span></div>
-      <div class="kpi-sub">of total customers</div></div>`;
+      <div class="kpi-sub">${diffBadge(kpi.hc_time,b.avg_hc_time,false)} sys ${b.avg_hc_time}</div></div>`;
 
   const stylistCards=stylists.map(s=>`
     <div class="stylist-card">
@@ -199,7 +202,7 @@ function buildPanel(snum,data){
     <div class="kpi-row">${kpiCards}</div>
     <div class="charts-row">
       <div class="chart-card">
-        <div class="chart-title">Weekly Customer Count — Last 12 Weeks</div>
+        <div class="chart-title">Weekly Customers — This Year vs Last Year</div>
         <div class="chart-wrap"><canvas id="trend-${snum}"></canvas></div>
       </div>
       <div class="chart-card">
@@ -244,10 +247,20 @@ const gc='rgba(255,255,255,0.04)';
 function makeTrend(id,snum,data){
   const el=document.getElementById(id);if(!el||charts[id])return;
   const d=data.trend[snum];
+  const allVals=[...d.curr,...d.prior.filter(v=>v>0)];
   charts[id]=new Chart(el,{type:'line',
-    data:{labels:d.dates,datasets:[{data:d.counts,borderColor:'rgba(56,189,248,1)',backgroundColor:'rgba(56,189,248,0.07)',borderWidth:2,pointRadius:2.5,pointBackgroundColor:'rgba(56,189,248,1)',tension:0.3,fill:true}]},
-    options:{...base,scales:{x:{grid:{color:gc},ticks:xt},y:{grid:{color:gc},ticks:xt,suggestedMin:Math.min(...d.counts)*0.88}},plugins:{...base.plugins,tooltip:{callbacks:{label:c=>' '+c.parsed.y+' custs'}}}},
-    plugins:[benchLine(data.bench.avg_cust)]});
+    data:{labels:d.dates,datasets:[
+      {label:'This Year',data:d.curr,borderColor:'rgba(56,189,248,1)',backgroundColor:'rgba(56,189,248,0.08)',borderWidth:2.5,pointRadius:3,pointBackgroundColor:'rgba(56,189,248,1)',tension:0.3,fill:true},
+      {label:'Last Year',data:d.prior.map(v=>v||null),borderColor:'rgba(156,163,175,0.6)',backgroundColor:'transparent',borderWidth:1.5,pointRadius:2,pointBackgroundColor:'rgba(156,163,175,0.6)',tension:0.3,fill:false,borderDash:[4,3]}
+    ]},
+    options:{...base,
+      plugins:{legend:{display:true,position:'top',labels:{color:'#7a8099',font:{family:'DM Sans',size:10},boxWidth:20,padding:12}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+c.parsed.y+' custs'}}},
+      scales:{
+        x:{grid:{color:gc},ticks:xt},
+        y:{grid:{color:gc},ticks:xt,suggestedMin:Math.min(...allVals)*0.88}
+      }
+    }
+  });
 }
 function makeNewRet(id,snum,data){
   const el=document.getElementById(id);if(!el||charts[id])return;
@@ -286,7 +299,7 @@ function showSalon(snum,btn){
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 (function(){
-  const data = {"generated":"2026-03-28 13:50","week_label":"03/28/2026","bench":{"avg_cust":456.0,"avg_cph":2.359,"avg_hc_time":14.99,"avg_new_return":30.6,"avg_repeat_return":76.2,"avg_yoy":3.6,"avg_wait":6.5},"kpis":{"3800":{"cust":465,"yoy":26.4,"new_return":38.9,"repeat_return":76.7,"cph":2.72,"avg_wait":3.6,"hc_time":14.7,"new_cust_pct":21.1},"3750":{"cust":212,"yoy":8.7,"new_return":32.8,"repeat_return":73.6,"cph":1.7,"avg_wait":9.5,"hc_time":15.4,"new_cust_pct":25.9},"3826":{"cust":473,"yoy":6.3,"new_return":31.3,"repeat_return":78.0,"cph":2.17,"avg_wait":10.4,"hc_time":18.3,"new_cust_pct":17.3},"4216":{"cust":274,"yoy":null,"new_return":62.5,"repeat_return":null,"cph":2.05,"avg_wait":4.2,"hc_time":15.8,"new_cust_pct":38.3}},"trend":{"3800":{"dates":["03/28"],"counts":[465],"cph":[2.6]},"3750":{"dates":["03/28"],"counts":[212],"cph":[1.77]},"3826":{"dates":["03/28"],"counts":[473],"cph":[2.1]},"4216":{"dates":["03/28"],"counts":[274],"cph":[2.0]}},"stylists":{"3800":[{"name":"Baczewski, Ewa","new_return":43.8,"reg_pct":84.5,"cph":2.6,"hc_time":17.9,"cust_count":99},{"name":"Felch, Michele","new_return":33.3,"reg_pct":77.4,"cph":2.1,"hc_time":14.3,"cust_count":35},{"name":"Goodwin, Patricia","new_return":30.8,"reg_pct":77.1,"cph":2.8,"hc_time":12.7,"cust_count":65},{"name":"Laport, Lisa","new_return":41.9,"reg_pct":76.1,"cph":3.0,"hc_time":13.8,"cust_count":140},{"name":"Stachowski, Michaela V","new_return":27.4,"reg_pct":68.5,"cph":2.7,"hc_time":14.1,"cust_count":116},{"name":"Rivas, Veronica","new_return":null,"reg_pct":null,"cph":2.4,"hc_time":18.8,"cust_count":10}],"3750":[{"name":"Rodriguez Santana, Gabrielly","new_return":25.0,"reg_pct":78.9,"cph":2.1,"hc_time":19.7,"cust_count":15},{"name":"Jaquez, Lizbeth","new_return":30.2,"reg_pct":75.7,"cph":1.8,"hc_time":13.4,"cust_count":56},{"name":"Garcia Rodriguez, Rut E","new_return":32.1,"reg_pct":74.1,"cph":1.6,"hc_time":16.8,"cust_count":27},{"name":"Colding, Amber","new_return":30.5,"reg_pct":71.6,"cph":1.9,"hc_time":11.1,"cust_count":15},{"name":"Sutherland, Elyssa","new_return":28.2,"reg_pct":71.0,"cph":1.7,"hc_time":17.5,"cust_count":56},{"name":"Fulmore, James B","new_return":27.0,"reg_pct":69.5,"cph":1.5,"hc_time":14.3,"cust_count":43}],"3826":[{"name":"Schwickrath, Taylor","new_return":33.3,"reg_pct":88.0,"cph":2.7,"hc_time":17.4,"cust_count":73},{"name":"Rosario, Maria V","new_return":45.0,"reg_pct":85.9,"cph":2.1,"hc_time":20.7,"cust_count":71},{"name":"Fontanez, Brittany","new_return":26.2,"reg_pct":81.5,"cph":2.4,"hc_time":17.6,"cust_count":67},{"name":"Curry, Kim","new_return":14.3,"reg_pct":80.0,"cph":2.0,"hc_time":16.3,"cust_count":25},{"name":"Gibbons, Hope","new_return":26.0,"reg_pct":79.9,"cph":2.3,"hc_time":18.5,"cust_count":37},{"name":"Spadafora, Gail","new_return":22.4,"reg_pct":78.6,"cph":2.3,"hc_time":16.3,"cust_count":85},{"name":"Showalter, Justin","new_return":null,"reg_pct":null,"cph":2.3,"hc_time":15.8,"cust_count":66},{"name":"Dorris, Christopher","new_return":null,"reg_pct":null,"cph":1.5,"hc_time":18.6,"cust_count":22},{"name":"Mosier, Carey","new_return":null,"reg_pct":null,"cph":1.3,"hc_time":30.8,"cust_count":27}],"4216":[{"name":"Mcduffie, Ingram","new_return":72.1,"reg_pct":0.0,"cph":2.3,"hc_time":12.8,"cust_count":86},{"name":"Mcnutt, Christine","new_return":77.8,"reg_pct":0.0,"cph":2.3,"hc_time":15.4,"cust_count":35},{"name":"Epps, Cristy L","new_return":null,"reg_pct":null,"cph":2.3,"hc_time":13.8,"cust_count":63},{"name":"Schwickrath, Taylor","new_return":null,"reg_pct":null,"cph":1.9,"hc_time":13.6,"cust_count":11},{"name":"Burt, Becky","new_return":null,"reg_pct":null,"cph":1.7,"hc_time":17.9,"cust_count":55},{"name":"Madison, Ricardo D","new_return":null,"reg_pct":null,"cph":1.5,"hc_time":28.2,"cust_count":24}]},"salon_names":{"3800":"Braden River","3750":"County Line","3826":"Kings Crossing","4216":"North River Ranch"}};
+  const data = {"generated":"2026-03-28 14:34","week_label":"03/28/2026","bench":{"avg_cust":456.0,"avg_cph":2.359,"avg_hc_time":14.99,"avg_new_return":30.6,"avg_repeat_return":76.2,"avg_yoy":3.6,"avg_wait":6.5,"total_salons":92},"kpis":{"3800":{"cust":465,"new_cust":98,"yoy":26.4,"new_return":38.9,"repeat_return":76.7,"cph":2.72,"avg_wait":3.6,"hc_time":14.7,"new_cust_pct":21.1,"rank":38,"total_salons":92},"3750":{"cust":212,"new_cust":55,"yoy":8.7,"new_return":32.8,"repeat_return":73.6,"cph":1.7,"avg_wait":9.5,"hc_time":15.4,"new_cust_pct":25.9,"rank":92,"total_salons":92},"3826":{"cust":473,"new_cust":82,"yoy":6.3,"new_return":31.3,"repeat_return":78.0,"cph":2.17,"avg_wait":10.4,"hc_time":18.3,"new_cust_pct":17.3,"rank":36,"total_salons":92},"4216":{"cust":274,"new_cust":105,"yoy":null,"new_return":62.5,"repeat_return":null,"cph":2.05,"avg_wait":4.2,"hc_time":15.8,"new_cust_pct":38.3,"rank":87,"total_salons":92}},"trend":{"3800":{"dates":["03/28"],"curr":[465],"prior":[0]},"3750":{"dates":["03/28"],"curr":[212],"prior":[0]},"3826":{"dates":["03/28"],"curr":[473],"prior":[0]},"4216":{"dates":["03/28"],"curr":[274],"prior":[0]}},"stylists":{"3800":[{"name":"Baczewski, Ewa","new_return":43.8,"reg_pct":84.5,"cph":2.6,"hc_time":17.9,"cust_count":99},{"name":"Felch, Michele","new_return":33.3,"reg_pct":77.4,"cph":2.1,"hc_time":14.3,"cust_count":35},{"name":"Goodwin, Patricia","new_return":30.8,"reg_pct":77.1,"cph":2.8,"hc_time":12.7,"cust_count":65},{"name":"Laport, Lisa","new_return":41.9,"reg_pct":76.1,"cph":3.0,"hc_time":13.8,"cust_count":140},{"name":"Stachowski, Michaela V","new_return":27.4,"reg_pct":68.5,"cph":2.7,"hc_time":14.1,"cust_count":116},{"name":"Rivas, Veronica","new_return":null,"reg_pct":null,"cph":2.4,"hc_time":18.8,"cust_count":10}],"3750":[{"name":"Rodriguez Santana, Gabrielly","new_return":25.0,"reg_pct":78.9,"cph":2.1,"hc_time":19.7,"cust_count":15},{"name":"Jaquez, Lizbeth","new_return":30.2,"reg_pct":75.7,"cph":1.8,"hc_time":13.4,"cust_count":56},{"name":"Garcia Rodriguez, Rut E","new_return":32.1,"reg_pct":74.1,"cph":1.6,"hc_time":16.8,"cust_count":27},{"name":"Colding, Amber","new_return":30.5,"reg_pct":71.6,"cph":1.9,"hc_time":11.1,"cust_count":15},{"name":"Sutherland, Elyssa","new_return":28.2,"reg_pct":71.0,"cph":1.7,"hc_time":17.5,"cust_count":56},{"name":"Fulmore, James B","new_return":27.0,"reg_pct":69.5,"cph":1.5,"hc_time":14.3,"cust_count":43}],"3826":[{"name":"Schwickrath, Taylor","new_return":33.3,"reg_pct":88.0,"cph":2.7,"hc_time":17.4,"cust_count":73},{"name":"Rosario, Maria V","new_return":45.0,"reg_pct":85.9,"cph":2.1,"hc_time":20.7,"cust_count":71},{"name":"Fontanez, Brittany","new_return":26.2,"reg_pct":81.5,"cph":2.4,"hc_time":17.6,"cust_count":67},{"name":"Curry, Kim","new_return":14.3,"reg_pct":80.0,"cph":2.0,"hc_time":16.3,"cust_count":25},{"name":"Gibbons, Hope","new_return":26.0,"reg_pct":79.9,"cph":2.3,"hc_time":18.5,"cust_count":37},{"name":"Spadafora, Gail","new_return":22.4,"reg_pct":78.6,"cph":2.3,"hc_time":16.3,"cust_count":85},{"name":"Showalter, Justin","new_return":null,"reg_pct":null,"cph":2.3,"hc_time":15.8,"cust_count":66},{"name":"Dorris, Christopher","new_return":null,"reg_pct":null,"cph":1.5,"hc_time":18.6,"cust_count":22},{"name":"Mosier, Carey","new_return":null,"reg_pct":null,"cph":1.3,"hc_time":30.8,"cust_count":27}],"4216":[{"name":"Mcduffie, Ingram","new_return":72.1,"reg_pct":0.0,"cph":2.3,"hc_time":12.8,"cust_count":86},{"name":"Mcnutt, Christine","new_return":77.8,"reg_pct":0.0,"cph":2.3,"hc_time":15.4,"cust_count":35},{"name":"Epps, Cristy L","new_return":null,"reg_pct":null,"cph":2.3,"hc_time":13.8,"cust_count":63},{"name":"Schwickrath, Taylor","new_return":null,"reg_pct":null,"cph":1.9,"hc_time":13.6,"cust_count":11},{"name":"Burt, Becky","new_return":null,"reg_pct":null,"cph":1.7,"hc_time":17.9,"cust_count":55},{"name":"Madison, Ricardo D","new_return":null,"reg_pct":null,"cph":1.5,"hc_time":28.2,"cust_count":24}]},"salon_names":{"3800":"Braden River","3750":"County Line","3826":"Kings Crossing","4216":"North River Ranch"}};
   appData=data;
   const salons=['3800','3750','3826','4216'];
   const names=data.salon_names||{'3800':'Braden River','3750':'County Line','3826':'Kings Crossing','4216':'North River Ranch'};
