@@ -1,5 +1,11 @@
 *.xlsx
 *.xls
+*.csv
+!All_Salons.xlsx
 __pycache__/
 *.pyc
 .env
+node_modules/
+screenshots/
+oauth_client.json
+.pbi-profile/

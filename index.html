@@ -39,7 +39,7 @@
   @media(min-width:600px){.kpi-row{grid-template-columns:repeat(4,1fr)}}
   .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 14px 12px;position:relative;overflow:hidden}
   .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent-color,var(--gc-blue))}
-  .kpi-label{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text);opacity:0.75;margin-bottom:6px;line-height:1.3}
+  .kpi-label{font-size:9px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;line-height:1.3}
   .kpi-value{font-family:var(--font-mono);font-size:26px;font-weight:500;color:var(--text);line-height:1}
   .kpi-value span{font-size:12px;color:var(--muted)}
   .kpi-sub{font-size:10px;color:var(--muted);margin-top:5px;line-height:1.3}
@@ -94,7 +94,7 @@
 <header>
   <div class="logo">
     <div class="logo-icon">GC</div>
-    <div><div class="logo-text">Performance Dashboard</div><div class="logo-sub">Owner View</div></div>
+    <div><div class="logo-text">Performance Dashboard</div><div class="logo-sub" id="logo-sub">Owner View</div></div>
   </div>
   <div class="week-badge" id="week-label">Loading...</div>
 </header>
@@ -109,7 +109,6 @@
 // CPH:             Excellence 2.3+, Growth 2.0-2.29, Minimum 1.8-1.99, Warning <1.8
 // HC Time:         Excellence <=15, Growth 15-17, Minimum 17-18, Warning >18
 // Avg Wait:        Excellence <=5, Growth 5-9, Minimum 10-14, Warning 15+
-// Weekend Wait>15: Excellence <=10%, Growth 11-19%, Minimum 20-29%, Warning 30%+
 
 function tierLabel(cls) {
   if(cls==='green') return 'Excellence';
@@ -131,7 +130,6 @@ function pill(v,thresholds,fmt,invert){
 const pct1=v=>v.toFixed(1)+'%';
 const fix1=v=>v.toFixed(1);
 const fixm=v=>v.toFixed(1)+'m';
-// Custom thresholds [Warning->Minimum, Minimum->Growth, Growth->Excellence]
 const newRetPill=v=>pill(v,[26,32,38],pct1,false);
 const regPctPill=v=>pill(v,[71,74,77],pct1,false);
 const cphPill=v=>pill(v,[1.8,2.0,2.3],fix1,false);
@@ -167,34 +165,29 @@ function buildPanel(snum,data){
   const waitColor=kpi.avg_wait<=5?'var(--green)':kpi.avg_wait<=9?'var(--yellow)':kpi.avg_wait<=14?'var(--orange)':'var(--red)';
   const waitBadge=kpi.avg_wait<=5?'<span class="badge green">'+kpi.avg_wait+'m</span>':kpi.avg_wait<=9?'<span class="badge yellow">'+kpi.avg_wait+'m</span>':kpi.avg_wait<=14?'<span class="badge orange">'+kpi.avg_wait+'m</span>':'<span class="badge red">'+kpi.avg_wait+'m</span>';
 
-  const rankColor = kpi.rank && kpi.rank<=25?'var(--green)':kpi.rank<=50?'var(--yellow)':'var(--red)';
   const rankBadge = kpi.rank ? `<span class="badge ${kpi.rank<=25?'green':kpi.rank<=50?'yellow':'red'}">#${kpi.rank} of ${b.total_salons}</span>` : '<span class="badge blue">New Salon</span>';
 
   const kpiCards=`
     <div class="kpi-card" style="--accent-color:${(kpi.yoy||0)>=10?'var(--green)':'var(--gc-blue)'}">
       <div class="kpi-label">Customers</div><div class="kpi-value">${kpi.cust||'—'}</div>
       <div class="kpi-sub">${yoyBadge} ${rankBadge}</div></div>
-    <div class="kpi-card" style="--accent-color:${kpi.cust_yoy_diff===null?'var(--gc-blue)':kpi.cust_yoy_diff>=0?'var(--green)':'var(--red)'}">
-      <div class="kpi-label">vs Same Week LY</div>
-      <div class="kpi-value">${kpi.cust_yoy_diff===null?'—':kpi.cust_yoy_diff>=0?'+'+kpi.cust_yoy_diff:kpi.cust_yoy_diff}</div>
-      <div class="kpi-sub">${kpi.cust_last_year!==null?'<span style="font-family:var(--font-mono);font-size:11px">'+kpi.cust_last_year+' last year</span>':'not available'}</div></div>
+    <div class="kpi-card" style="--accent-color:var(--green)">
+      <div class="kpi-label">New Customers</div><div class="kpi-value">${kpi.new_cust||'—'}</div>
+      <div class="kpi-sub">${kpi.new_cust_pct}% of total this week</div></div>
     <div class="kpi-card" style="--accent-color:${(kpi.new_return||0)>=38?'var(--green)':(kpi.new_return||0)>=32?'var(--yellow)':(kpi.new_return||0)>=26?'var(--orange)':'var(--red)'}">
       <div class="kpi-label">New Cust Return</div>
       <div class="kpi-value">${kpi.new_return!==null&&kpi.new_return!==undefined?kpi.new_return+'<span>%</span>':'<span style="font-size:16px">—</span>'}</div>
       <div class="kpi-sub">${kpi.new_return!==null&&kpi.new_return!==undefined?'<span class="badge '+(kpi.new_return>=38?'green':kpi.new_return>=32?'yellow':kpi.new_return>=26?'orange':'red')+'">'+kpi.new_return.toFixed(1)+'%</span>':'not yet available'}</div></div>
-    <div class="kpi-card" style="--accent-color:var(--green)">
-      <div class="kpi-label">New Customers</div><div class="kpi-value">${kpi.new_cust||'—'}</div>
-      <div class="kpi-sub">${kpi.new_cust_pct}% of total this week</div></div>
     <div class="kpi-card" style="--accent-color:${(kpi.repeat_return||0)>=77?'var(--green)':(kpi.repeat_return||0)>=74?'var(--yellow)':(kpi.repeat_return||0)>=71?'var(--orange)':'var(--red)'}">
       <div class="kpi-label">Repeat Return</div>
       <div class="kpi-value">${kpi.repeat_return!==null&&kpi.repeat_return!==undefined?kpi.repeat_return+'<span>%</span>':'<span style="font-size:16px">—</span>'}</div>
-      <div class="kpi-sub">${kpi.repeat_return!==null&&kpi.repeat_return!==undefined?'<span class="badge '+(kpi.repeat_return>=77?'green':kpi.repeat_return>=74?'yellow':kpi.repeat_return>=71?'orange':'red')+'">'+kpi.repeat_return.toFixed(1)+'%</span>':'not yet available'}</div></div>
-    <div class="kpi-card" style="--accent-color:${waitColor}">
-      <div class="kpi-label">Avg Wait</div><div class="kpi-value">${kpi.avg_wait}<span> min</span></div>
-      <div class="kpi-sub">${waitBadge} sys ${b.avg_wait}m</div></div>
+      <div class="kpi-sub">${kpi.repeat_return!==null&&kpi.repeat_return!==undefined?'<span class="badge '+(kpi.repeat_return>=74?'green':kpi.repeat_return>=74?'yellow':kpi.repeat_return>=71?'orange':'red')+'">'+kpi.repeat_return.toFixed(1)+'%</span>':'not yet available'}</div></div>
     <div class="kpi-card" style="--accent-color:${(kpi.cph||0)>=(b.avg_cph||2)?'var(--green)':'var(--red)'}">
       <div class="kpi-label">Cuts Per Hour</div><div class="kpi-value">${kpi.cph||'—'}</div>
       <div class="kpi-sub">${diffBadge(kpi.cph,b.avg_cph,true)} sys ${b.avg_cph}</div></div>
+    <div class="kpi-card" style="--accent-color:${waitColor}">
+      <div class="kpi-label">Avg Wait</div><div class="kpi-value">${kpi.avg_wait}<span> min</span></div>
+      <div class="kpi-sub">${waitBadge} sys ${b.avg_wait}m</div></div>
     <div class="kpi-card" style="--accent-color:${(kpi.hc_time||99)<=(b.avg_hc_time||15)?'var(--green)':'var(--yellow)'}">
       <div class="kpi-label">Avg HC Time</div><div class="kpi-value">${kpi.hc_time}<span> min</span></div>
       <div class="kpi-sub">${diffBadge(kpi.hc_time,b.avg_hc_time,false)} sys ${b.avg_hc_time}</div></div>`;
@@ -323,21 +316,35 @@ function showSalon(snum,btn){
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 (function(){
-  const data = {"generated":"2026-04-11 12:38","week_label":"04/11/2026","bench":{"avg_cust":439.0,"avg_cph":2.428,"avg_hc_time":14.79,"avg_new_return":28.7,"avg_repeat_return":76.2,"avg_yoy":3.6,"avg_wait":6.5,"total_salons":92},"kpis":{"3800":{"cust":469,"cust_last_year":358,"cust_yoy_diff":111,"new_cust":87,"yoy":31.0,"new_return":42.7,"repeat_return":80.5,"cph":2.95,"avg_wait":3.7,"hc_time":14.5,"new_cust_pct":18.6,"rank":32,"total_salons":92},"3750":{"cust":192,"cust_last_year":228,"cust_yoy_diff":-36,"new_cust":32,"yoy":-15.8,"new_return":20.7,"repeat_return":74.7,"cph":1.6,"avg_wait":3.4,"hc_time":13.1,"new_cust_pct":16.7,"rank":90,"total_salons":92},"3826":{"cust":457,"cust_last_year":452,"cust_yoy_diff":5,"new_cust":84,"yoy":1.1,"new_return":40.0,"repeat_return":75.0,"cph":2.26,"avg_wait":10.8,"hc_time":18.2,"new_cust_pct":18.4,"rank":38,"total_salons":92},"4216":{"cust":189,"cust_last_year":null,"cust_yoy_diff":null,"new_cust":69,"yoy":null,"new_return":43.4,"repeat_return":100.0,"cph":1.62,"avg_wait":2.8,"hc_time":15.5,"new_cust_pct":36.5,"rank":91,"total_salons":92}},"trend":{"3800":{"dates":["01/23","01/30","02/06","02/13","02/20","02/27","03/06","03/13","03/20","03/27","04/03","04/10"],"curr":[517,419,425,497,524,461,501,535,516,465,520,469],"prior":[352,387,395,393,391,378,390,373,391,368,388,358]},"3750":{"dates":["01/23","01/30","02/06","02/13","02/20","02/27","03/06","03/13","03/20","03/27","04/03","04/10"],"curr":[231,234,226,248,216,218,236,209,235,212,203,192],"prior":[191,223,234,234,204,189,202,214,191,195,223,228]},"3826":{"dates":["01/23","01/30","02/06","02/13","02/20","02/27","03/06","03/13","03/20","03/27","04/03","04/10"],"curr":[497,429,415,477,507,461,457,489,465,473,530,457],"prior":[412,448,434,462,381,423,464,430,419,445,439,452]},"4216":{"dates":["01/23","01/30","02/06","02/13","02/20","02/27","03/06","03/13","03/20","03/27","04/03","04/10"],"curr":[255,275,250,240,277,260,249,283,277,274,277,189],"prior":[0,0,0,0,0,0,0,0,0,0,0,0]}},"stylists":{"3800":[{"name":"Laport, Lisa","new_return":47.4,"reg_pct":76.2,"cph":3.0,"hc_time":14.2,"cust_count":130},{"name":"Gannon, Donna M","new_return":36.0,"reg_pct":70.6,"cph":3.4,"hc_time":12.5,"cust_count":125},{"name":"Felch, Michele","new_return":38.5,"reg_pct":63.9,"cph":2.8,"hc_time":15.8,"cust_count":25},{"name":"Baczewski, Ewa","new_return":33.3,"reg_pct":63.6,"cph":2.5,"hc_time":17.4,"cust_count":68},{"name":"Stachowski, Michaela V","new_return":null,"reg_pct":null,"cph":2.8,"hc_time":14.7,"cust_count":121}],"3750":[{"name":"Colding, Amber","new_return":25.0,"reg_pct":81.8,"cph":1.6,"hc_time":12.4,"cust_count":23},{"name":"Jaquez, Lizbeth","new_return":27.3,"reg_pct":69.0,"cph":1.7,"hc_time":11.0,"cust_count":51},{"name":"Garcia Rodriguez, Rut E","new_return":54.5,"reg_pct":62.1,"cph":1.6,"hc_time":14.9,"cust_count":31},{"name":"Fulmore, James B","new_return":8.7,"reg_pct":59.6,"cph":1.7,"hc_time":12.2,"cust_count":52},{"name":"Sutherland, Elyssa","new_return":9.5,"reg_pct":58.8,"cph":1.4,"hc_time":17.0,"cust_count":35}],"3826":[{"name":"Dorris, Christopher","new_return":33.3,"reg_pct":81.2,"cph":2.0,"hc_time":19.2,"cust_count":38},{"name":"Schwickrath, Taylor","new_return":73.3,"reg_pct":78.9,"cph":2.8,"hc_time":15.3,"cust_count":58},{"name":"Curry, Kim","new_return":12.5,"reg_pct":78.4,"cph":1.9,"hc_time":16.2,"cust_count":20},{"name":"Spadafora, Gail","new_return":33.3,"reg_pct":77.8,"cph":2.2,"hc_time":16.5,"cust_count":69},{"name":"Rosario, Maria V","new_return":37.5,"reg_pct":76.5,"cph":2.3,"hc_time":22.3,"cust_count":81},{"name":"Gibbons, Hope","new_return":45.5,"reg_pct":73.8,"cph":1.8,"hc_time":21.7,"cust_count":16},{"name":"Fontanez, Brittany","new_return":33.3,"reg_pct":69.6,"cph":2.7,"hc_time":14.8,"cust_count":77},{"name":"Showalter, Justin","new_return":null,"reg_pct":null,"cph":2.1,"hc_time":16.6,"cust_count":59},{"name":"Mosier, Carey","new_return":null,"reg_pct":null,"cph":1.8,"hc_time":24.5,"cust_count":39}],"4216":[{"name":"Madison, Ricardo D","new_return":26.3,"reg_pct":9.5,"cph":1.2,"hc_time":23.4,"cust_count":19},{"name":"Mcduffie, Ingram","new_return":49.2,"reg_pct":0.0,"cph":1.5,"hc_time":14.7,"cust_count":51},{"name":"Epps, Cristy L","new_return":null,"reg_pct":null,"cph":1.9,"hc_time":13.0,"cust_count":60},{"name":"Burt, Becky","new_return":null,"reg_pct":null,"cph":1.7,"hc_time":16.5,"cust_count":54},{"name":"Schwickrath, Taylor","new_return":null,"reg_pct":null,"cph":1.3,"hc_time":10.1,"cust_count":5}]},"salon_names":{"3800":"Braden River","3750":"County Line","3826":"Kings Crossing","4216":"North River Ranch"}};
-  appData=data;
-  const salons=['3800','3750','3826','4216'];
-  const names=data.salon_names||{'3800':'Braden River','3750':'County Line','3826':'Kings Crossing','4216':'North River Ranch'};
-  document.getElementById('salon-tabs').innerHTML=salons.map((s,i)=>
-    `<button class="tab-btn ${i===0?'active':''}" onclick="showSalon('${s}',this)"><span class="tab-num">${s}</span>${names[s]}</button>`).join('');
-  document.getElementById('main-content').innerHTML=salons.map(s=>buildPanel(s,data)).join('');
-  document.getElementById('week-label').textContent=data.week_label;
-  // Ensure first panel is visible before charts render
-  const firstPanel=document.getElementById('panel-3800');
-  if(firstPanel) firstPanel.classList.add('active');
-  const firstTab=document.querySelector('.tab-btn');
-  if(firstTab) firstTab.classList.add('active');
-  document.getElementById('loading').style.display='none';
-  setTimeout(()=>initCharts('3800',data),100);
+  const data = {"generated":"2026-05-02 18:31","week_label":"05/02/2026","bench":{"avg_cust":456.0,"avg_cph":2.359,"avg_hc_time":14.99,"avg_new_return":30.6,"avg_repeat_return":76.2,"avg_yoy":3.6,"avg_wait":6.5,"total_salons":92},"kpis":{"3800":{"cust":465,"new_cust":98,"yoy":26.4,"new_return":38.9,"repeat_return":76.7,"cph":2.72,"avg_wait":3.6,"hc_time":14.7,"new_cust_pct":21.1,"rank":38,"total_salons":92},"3750":{"cust":212,"new_cust":55,"yoy":8.7,"new_return":32.8,"repeat_return":73.6,"cph":1.7,"avg_wait":9.5,"hc_time":15.4,"new_cust_pct":25.9,"rank":92,"total_salons":92},"3826":{"cust":473,"new_cust":82,"yoy":6.3,"new_return":31.3,"repeat_return":78.0,"cph":2.17,"avg_wait":10.4,"hc_time":18.3,"new_cust_pct":17.3,"rank":36,"total_salons":92},"4216":{"cust":274,"new_cust":105,"yoy":null,"new_return":62.5,"repeat_return":null,"cph":2.05,"avg_wait":4.2,"hc_time":15.8,"new_cust_pct":38.3,"rank":87,"total_salons":92}},"trend":{"3800":{"dates":["01/09","01/16","01/23","01/30","02/06","02/13","02/20","02/27","03/06","03/13","03/20","03/27"],"curr":[500,486,517,419,425,497,524,461,501,535,516,465],"prior":[350,347,352,387,395,393,391,378,390,373,391,368]},"3750":{"dates":["01/09","01/16","01/23","01/30","02/06","02/13","02/20","02/27","03/06","03/13","03/20","03/27"],"curr":[246,237,231,234,226,248,216,218,236,209,235,212],"prior":[204,224,191,223,234,234,204,189,202,214,191,195]},"3826":{"dates":["01/09","01/16","01/23","01/30","02/06","02/13","02/20","02/27","03/06","03/13","03/20","03/27"],"curr":[502,477,497,429,415,477,507,461,457,489,465,473],"prior":[479,434,412,448,434,462,381,423,464,430,419,445]},"4216":{"dates":["01/09","01/16","01/23","01/30","02/06","02/13","02/20","02/27","03/06","03/13","03/20","03/27"],"curr":[324,258,255,275,250,240,277,260,249,283,277,274],"prior":[0,0,0,0,0,0,0,0,0,0,0,0]}},"stylists":{"3800":[{"name":"Laport, Lisa","new_return":28.6,"reg_pct":82.4,"cph":2.8,"hc_time":15.7,"cust_count":111},{"name":"Baczewski, Ewa","new_return":38.5,"reg_pct":74.5,"cph":2.3,"hc_time":16.1,"cust_count":23},{"name":"Stachowski, Michaela V","new_return":10.0,"reg_pct":74.4,"cph":3.0,"hc_time":14.1,"cust_count":120},{"name":"Felch, Michele","new_return":36.4,"reg_pct":71.1,"cph":2.7,"hc_time":15.4,"cust_count":45},{"name":"Gannon, Donna M","new_return":44.4,"reg_pct":65.0,"cph":2.7,"hc_time":14.4,"cust_count":100},{"name":"Williams, Melissa D","new_return":null,"reg_pct":null,"cph":2.8,"hc_time":15.5,"cust_count":35}],"3750":[{"name":"Fulmore, James B","new_return":16.7,"reg_pct":85.7,"cph":1.9,"hc_time":11.7,"cust_count":63},{"name":"Jaquez, Lizbeth","new_return":44.4,"reg_pct":81.6,"cph":1.3,"hc_time":11.5,"cust_count":40},{"name":"Colding, Amber","new_return":16.7,"reg_pct":80.0,"cph":1.5,"hc_time":10.7,"cust_count":28},{"name":"Garcia Rodriguez, Rut E","new_return":50.0,"reg_pct":76.0,"cph":1.1,"hc_time":13.2,"cust_count":18},{"name":"Rodriguez Santana, Gabrielly","new_return":33.3,"reg_pct":66.7,"cph":1.0,"hc_time":18.9,"cust_count":7},{"name":"Sutherland, Elyssa","new_return":20.0,"reg_pct":65.1,"cph":1.2,"hc_time":20.0,"cust_count":33}],"3826":[{"name":"Rosario, Maria V","new_return":37.5,"reg_pct":90.1,"cph":2.1,"hc_time":20.5,"cust_count":67},{"name":"Schwickrath, Taylor","new_return":70.0,"reg_pct":88.2,"cph":2.5,"hc_time":14.0,"cust_count":29},{"name":"Mosier, Carey","new_return":20.0,"reg_pct":85.7,"cph":1.7,"hc_time":24.7,"cust_count":32},{"name":"Dorris, Christopher","new_return":28.6,"reg_pct":83.3,"cph":1.4,"hc_time":20.1,"cust_count":27},{"name":"Gibbons, Hope","new_return":30.8,"reg_pct":81.7,"cph":1.9,"hc_time":19.1,"cust_count":25},{"name":"Fontanez, Brittany","new_return":70.0,"reg_pct":80.8,"cph":2.3,"hc_time":16.0,"cust_count":73},{"name":"Curry, Kim","new_return":50.0,"reg_pct":69.7,"cph":1.7,"hc_time":15.3,"cust_count":16},{"name":"Spadafora, Gail","new_return":29.4,"reg_pct":56.4,"cph":1.9,"hc_time":16.0,"cust_count":61},{"name":"Showalter, Justin","new_return":null,"reg_pct":null,"cph":2.3,"hc_time":18.1,"cust_count":35},{"name":"Vargas, Marangeli","new_return":null,"reg_pct":null,"cph":2.0,"hc_time":15.9,"cust_count":35}],"4216":[{"name":"Showalter, Justin","new_return":48.6,"reg_pct":16.7,"cph":1.5,"hc_time":17.6,"cust_count":43},{"name":"Epps, Cristy L","new_return":null,"reg_pct":null,"cph":2.1,"hc_time":14.1,"cust_count":68},{"name":"Gibbons, Hope","new_return":null,"reg_pct":null,"cph":2.1,"hc_time":16.8,"cust_count":29},{"name":"Schwickrath, Taylor","new_return":null,"reg_pct":null,"cph":2.1,"hc_time":11.9,"cust_count":40},{"name":"Burt, Becky","new_return":null,"reg_pct":null,"cph":1.6,"hc_time":16.3,"cust_count":53}]},"salon_names":{"3800":"Braden River","3750":"County Line","3826":"Kings Crossing","4216":"North River Ranch"}};
+  const singleSalon = null;
+  appData = data;
+  const salons = ['3800','3750','3826','4216'];
+  const names = data.salon_names || {'3800':'Braden River','3750':'County Line','3826':'Kings Crossing','4216':'North River Ranch'};
+
+  document.getElementById('week-label').textContent = data.week_label;
+
+  if (singleSalon) {
+    // Per-location view: no tabs, show only this salon
+    document.getElementById('logo-sub').textContent = names[singleSalon] || singleSalon;
+    document.title = (names[singleSalon] || singleSalon) + ' · Performance Dashboard';
+    document.getElementById('salon-tabs').style.display = 'none';
+    document.getElementById('main-content').innerHTML = buildPanel(singleSalon, data);
+    document.getElementById('panel-' + singleSalon).classList.add('active');
+    document.getElementById('loading').style.display = 'none';
+    setTimeout(() => initCharts(singleSalon, data), 100);
+  } else {
+    // Owner view: all salons with tabs
+    document.getElementById('salon-tabs').innerHTML = salons.map((s, i) =>
+      `<button class="tab-btn ${i===0?'active':''}" onclick="showSalon('${s}',this)"><span class="tab-num">${s}</span>${names[s]}</button>`).join('');
+    document.getElementById('main-content').innerHTML = salons.map(s => buildPanel(s, data)).join('');
+    const firstPanel = document.getElementById('panel-3800');
+    if (firstPanel) firstPanel.classList.add('active');
+    const firstTab = document.querySelector('.tab-btn');
+    if (firstTab) firstTab.classList.add('active');
+    document.getElementById('loading').style.display = 'none';
+    setTimeout(() => initCharts('3800', data), 100);
+  }
 })();
 </script>
 </body>
