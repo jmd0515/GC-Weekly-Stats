@@ -2,6 +2,7 @@
 *.xls
 *.csv
 !All_Salons.xlsx
+!All Salons *.xlsx
 __pycache__/
 *.pyc
 .env

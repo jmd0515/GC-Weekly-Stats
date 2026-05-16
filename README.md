@@ -23,17 +23,16 @@ Settings → Secrets and variables → Actions:
 ### Manual run
 Actions tab → **Weekly Report** → **Run workflow**.
 
-## Updating All_Salons.xlsx
+## Updating All_Salons (system-wide weekly data)
 
-`All_Salons.xlsx` is the system-wide weekly dataset (93 salons × 19 metrics, accumulating week over week). It comes from a Power BI Customer Experience report and is currently **updated manually**:
+`All_Salons.xlsx` is the historical master (93 salons × 19 metrics through 03/27/2026). Each week, drop the new Power BI export into this folder named `All Salons MM.DD.YY.xlsx` (e.g. `All Salons 05.15.26.xlsx`) and commit. `generate_data.py` automatically merges the master with every weekly file present, deduped by Salon + WeekEndingDate.
 
-1. In Power BI, set start/end date to the most recent Friday.
-2. Hover the table visual → `⋯` → **Export data** → save the xlsx.
-3. Replace `All_Salons.xlsx` in this repo and commit.
+Workflow each week:
+1. In Power BI, set start/end to the most recent Friday.
+2. Hover the table visual → `⋯` → **Export data** → save as `All Salons MM.DD.YY.xlsx` in this folder.
+3. Commit + push. The next scheduled (or manual) workflow run regenerates the dashboards.
 
-The next scheduled (or manual) workflow run will pick it up.
-
-> Automation of this step is parked in [pbi_export.js](pbi_export.js) — Microsoft Entra auth makes headless Power BI access tricky. To revisit later.
+> Automating step 2 is parked in [pbi_export.js](pbi_export.js) — Microsoft Entra auth makes headless Power BI access tricky. To revisit later.
 
 ## Local manual run (fallback)
 The original double-click flow still works: drop the three `.xlsx` files in this folder and run `run.bat`.

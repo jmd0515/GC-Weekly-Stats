@@ -24,6 +24,7 @@ import numpy as np
 import json
 import sys
 import os
+import glob
 from datetime import datetime
 
 # ── File names ──────────────────────────────────────────────────────────────
@@ -81,7 +82,22 @@ def smart_read(filepath, key_col):
 
 df     = smart_read(EMP_STATS_FILE, 'Salon Number')
 df2    = smart_read(RETURN_STATS_FILE, 'Salon Number')
-sys_df = smart_read(SYSTEM_FILE, 'Salon')
+
+# System file: the master All_Salons.xlsx plus any weekly "All Salons MM.DD.YY.xlsx"
+# drops in this folder. New weeks just get added to the folder; no manual merge.
+sys_frames = [smart_read(SYSTEM_FILE, 'Salon')]
+for wf in sorted(glob.glob(os.path.join(SCRIPT_DIR, 'All Salons *.xlsx'))):
+    if os.path.basename(wf).startswith('~$'):  # Excel lock files
+        continue
+    sys_frames.append(smart_read(wf, 'Salon'))
+    print(f"  ✓ {os.path.basename(wf)}")
+sys_df = (
+    pd.concat(sys_frames, ignore_index=True)
+      .drop_duplicates(subset=['Salon', 'SalonWeekEndingDate'], keep='last')
+      .reset_index(drop=True)
+)
+# Some exports include a trailing "Totals" row — keep only real "NNNN: Name" salon rows.
+sys_df = sys_df[sys_df['Salon'].astype(str).str.match(r'^\d{4}:')].reset_index(drop=True)
 
 # ── Parse dates ───────────────────────────────────────────────────────────────
 if 'Date' in df.columns:
