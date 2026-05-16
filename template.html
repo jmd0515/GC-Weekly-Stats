@@ -37,8 +37,8 @@
   .section-label{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text);margin-bottom:10px;padding-left:2px}
   .kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
   @media(min-width:600px){.kpi-row{grid-template-columns:repeat(4,1fr)}}
-  .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 14px 12px;position:relative;overflow:hidden}
-  .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent-color,var(--gc-blue))}
+  .kpi-card{background:linear-gradient(180deg,color-mix(in srgb,var(--accent-color,var(--gc-blue)) 14%,var(--surface)) 0%,var(--surface) 55%);border:1px solid color-mix(in srgb,var(--accent-color,var(--gc-blue)) 35%,var(--border));border-left:4px solid var(--accent-color,var(--gc-blue));border-radius:10px;padding:14px 14px 12px;position:relative;overflow:hidden;box-shadow:0 1px 8px color-mix(in srgb,var(--accent-color,var(--gc-blue)) 18%,transparent)}
+  .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:var(--accent-color,var(--gc-blue))}
   .kpi-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text);margin-bottom:6px;line-height:1.3}
   .kpi-value{font-family:var(--font-mono);font-size:26px;font-weight:500;color:var(--text);line-height:1}
   .kpi-value span{font-size:18px;color:#b0b6c4;font-weight:500}
