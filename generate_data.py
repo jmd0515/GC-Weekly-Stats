@@ -216,6 +216,7 @@ w25['week'] = w25['WeekDate'].dt.isocalendar().week.astype(int)
 w26['week'] = w26['WeekDate'].dt.isocalendar().week.astype(int)
 
 trend = {}
+ytd = {}
 for snum in SALONS:
     s26 = w26[w26['SalonNum']==snum].drop_duplicates('week').sort_values('week').tail(12)
     s25 = w25[w25['SalonNum']==snum].drop_duplicates('week').set_index('week')['Cust Count']
@@ -223,6 +224,19 @@ for snum in SALONS:
         'dates' : [d.strftime('%m/%d') for d in s26['WeekDate']],
         'curr'  : [safe_int(x) for x in s26['Cust Count']],
         'prior' : [safe_int(s25.get(w, 0)) for w in s26['week']],
+    }
+    # YTD: every week of the current year so far, compared to the same ISO weeks last year
+    full26 = w26[w26['SalonNum']==snum].drop_duplicates('week')
+    weeks_in_26 = full26['week'].tolist()
+    full25 = w25[(w25['SalonNum']==snum) & (w25['week'].isin(weeks_in_26))].drop_duplicates('week')
+    cur_ytd = int(full26['Cust Count'].sum())
+    prior_ytd = int(full25['Cust Count'].sum())
+    growth = ((cur_ytd - prior_ytd) / prior_ytd * 100) if prior_ytd else None
+    ytd[str(snum)] = {
+        'curr': cur_ytd,
+        'prior': prior_ytd,
+        'growth_pct': safe(growth, 1) if growth is not None else None,
+        'weeks': len(weeks_in_26),
     }
 
 # ── Stylist return stats (last 8 weeks) ───────────────────────────────────────
@@ -282,6 +296,7 @@ output = {
     'bench'      : bench,
     'kpis'       : kpis,
     'trend'      : trend,
+    'ytd'        : ytd,
     'stylists'   : stylists,
     'salon_names': {str(k): v for k, v in SALON_SHORT.items()},
 }

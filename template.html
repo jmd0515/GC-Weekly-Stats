@@ -57,6 +57,15 @@
   .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px}
   .chart-title{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
   .chart-wrap{position:relative;height:180px}
+  .ytd-strip{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:8px 10px;margin-bottom:10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px}
+  .ytd-label{font-size:9px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+  .ytd-vals{font-family:var(--font-mono);font-size:12px;color:var(--text)}
+  .ytd-vals .sep{color:var(--muted);margin:0 6px}
+  .ytd-vals .prior{color:var(--muted)}
+  .ytd-growth{font-family:var(--font-mono);font-size:11px;padding:2px 6px;border-radius:3px;font-weight:500}
+  .ytd-growth.green{background:rgba(34,197,94,.15);color:#4ade80}
+  .ytd-growth.red{background:rgba(239,68,68,.15);color:#f87171}
+  .ytd-growth.muted{background:var(--surface);color:var(--muted)}
   .stylist-section{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
   .stylist-header{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
   .stylist-title{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
@@ -143,6 +152,19 @@ function diffBadge(val,bench,higherBetter,suffix){
   return `<span class="badge ${cls}">${sign}${diff.toFixed(1)}${suffix}</span>`;
 }
 
+const fmtNum=n=>n==null?'—':Number(n).toLocaleString();
+function ytdStrip(y){
+  if(!y) return '';
+  const g=y.growth_pct;
+  const gCls = g==null ? 'muted' : (g>=0 ? 'green' : 'red');
+  const gTxt = g==null ? '—' : (g>=0?'+':'')+g.toFixed(1)+'%';
+  return `<div class="ytd-strip">
+    <span class="ytd-label">YTD Customers <span style="color:var(--muted);font-weight:400">(${y.weeks}w)</span></span>
+    <span class="ytd-vals">${fmtNum(y.curr)}<span class="sep">vs</span><span class="prior">${fmtNum(y.prior)} LY</span></span>
+    <span class="ytd-growth ${gCls}">${gTxt}</span>
+  </div>`;
+}
+
 // ── Build panel HTML ──────────────────────────────────────────────────────────
 function buildPanel(snum,data){
   const kpi=data.kpis[snum]||{}, b=data.bench;
@@ -220,6 +242,7 @@ function buildPanel(snum,data){
     <div class="charts-row">
       <div class="chart-card">
         <div class="chart-title">Weekly Customers — This Year vs Last Year</div>
+        ${ytdStrip(data.ytd?.[snum])}
         <div class="chart-wrap"><canvas id="trend-${snum}"></canvas></div>
       </div>
       <div class="chart-card">
