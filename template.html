@@ -189,10 +189,18 @@ function buildPanel(snum,data){
 
   const rankBadge = kpi.rank ? `<span class="badge ${kpi.rank<=25?'green':kpi.rank<=50?'yellow':'red'}">#${kpi.rank} of ${b.total_salons}</span>` : '<span class="badge blue">New Salon</span>';
 
+  const y = data.ytd?.[snum];
+  const ytdAccent = !y || y.growth_pct==null ? 'var(--gc-blue)' : (y.growth_pct>=0 ? 'var(--green)' : 'var(--red)');
+  const ytdValue = !y || y.growth_pct==null ? '<span style="font-size:16px">—</span>' : (y.growth_pct>=0?'+':'')+y.growth_pct.toFixed(1)+'<span>%</span>';
+  const ytdSub = !y ? '' : (y.prior>0 ? `${y.curr.toLocaleString()} vs ${y.prior.toLocaleString()} LY (${y.weeks}w)` : `${y.curr.toLocaleString()} YTD (${y.weeks}w · new salon)`);
+
   const kpiCards=`
     <div class="kpi-card" style="--accent-color:${(kpi.yoy||0)>=10?'var(--green)':'var(--gc-blue)'}">
       <div class="kpi-label">Customers</div><div class="kpi-value">${kpi.cust||'—'}</div>
       <div class="kpi-sub">${yoyBadge} ${rankBadge}</div></div>
+    <div class="kpi-card" style="--accent-color:${ytdAccent}">
+      <div class="kpi-label">YTD vs LY</div><div class="kpi-value">${ytdValue}</div>
+      <div class="kpi-sub">${ytdSub}</div></div>
     <div class="kpi-card" style="--accent-color:var(--green)">
       <div class="kpi-label">New Customers</div><div class="kpi-value">${kpi.new_cust||'—'}</div>
       <div class="kpi-sub">${kpi.new_cust_pct}% of total this week</div></div>
