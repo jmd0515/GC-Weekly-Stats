@@ -239,9 +239,9 @@ for snum in SALONS:
         'weeks': len(weeks_in_26),
     }
 
-# ── Stylist return stats (last 8 weeks) ───────────────────────────────────────
-last8_ret = df2[df2['WeekEnd'] >= latest_ret - pd.Timedelta(weeks=8)]
-stylist_ret = last8_ret.groupby(['Salon Number', 'Employee']).agg(
+# ── Stylist return stats (current week only) ──────────────────────────────────
+current_ret = df2[df2['WeekEnd'] == latest_ret]
+stylist_ret = current_ret.groupby(['Salon Number', 'Employee']).agg(
     New_Cust    =('New Cust', 'sum'),
     New_Returns =('New Cust Returns', 'sum'),
     Repeat_Cust =('Repeat Cust', 'sum'),
