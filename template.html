@@ -67,14 +67,23 @@
   .ytd-growth.red{background:rgba(239,68,68,.15);color:#f87171}
   .ytd-growth.muted{background:var(--surface);color:var(--muted)}
   .stylist-section{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
-  .stylist-header{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-  .stylist-title{font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text)}
-  .stylist-note{font-size:10px;color:var(--muted);font-style:italic}
-  .stylist-cards{padding:8px;display:flex;flex-direction:column;gap:8px}
-  .stylist-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
-  .sc-name{font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text)}
-  .sc-metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-  .sc-metric-label{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text);margin-bottom:4px}
+  .stylist-header{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px}
+  .stylist-title{font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text)}
+  .stylist-note{font-size:11px;color:#b0b6c4;font-style:italic}
+  .stylist-cards{padding:8px;display:flex;flex-direction:column;gap:7px}
+  .stylist-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 11px}
+  .sc-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:8px}
+  .sc-name{font-size:15px;font-weight:600;color:var(--text);line-height:1.2;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sc-custs{font-family:var(--font-mono);font-size:13px;color:#b0b6c4;font-weight:500;white-space:nowrap}
+  .sc-custs b{color:var(--text);font-weight:600}
+  .sc-chips{display:flex;flex-wrap:wrap;gap:5px}
+  .sc-chip{display:inline-flex;align-items:center;padding:4px 8px;border-radius:6px;font-family:var(--font-mono);font-size:13px;font-weight:500;line-height:1}
+  .sc-chip .sc-cl{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-right:6px;opacity:.85}
+  .sc-chip.green{background:rgba(34,197,94,.18);color:#86efac}
+  .sc-chip.yellow{background:rgba(245,158,11,.18);color:#fcd34d}
+  .sc-chip.orange{background:rgba(249,115,22,.18);color:#fdba74}
+  .sc-chip.red{background:rgba(239,68,68,.18);color:#fca5a5}
+  .sc-chip.gray{background:rgba(122,128,153,.15);color:#b0b6c4}
   .stylist-table-wrap{display:none}
   @media(min-width:700px){
     .stylist-cards{display:none}
@@ -153,6 +162,17 @@ function diffBadge(val,bench,higherBetter,suffix){
 }
 
 const fmtNum=n=>n==null?'—':Number(n).toLocaleString();
+
+function chip(label, v, thresholds, fmt, invert){
+  if(v===null||v===undefined) return `<span class="sc-chip gray"><span class="sc-cl">${label}</span>—</span>`;
+  let cls;
+  if(invert){
+    cls=v<=thresholds[0]?'green':v<=thresholds[1]?'yellow':v<=thresholds[2]?'orange':'red';
+  } else {
+    cls=v>=thresholds[2]?'green':v>=thresholds[1]?'yellow':v>=thresholds[0]?'orange':'red';
+  }
+  return `<span class="sc-chip ${cls}"><span class="sc-cl">${label}</span>${fmt(v)}</span>`;
+}
 function ytdStrip(y){
   if(!y) return '';
   const g=y.growth_pct;
@@ -224,13 +244,17 @@ function buildPanel(snum,data){
 
   const stylistCards=stylists.map(s=>`
     <div class="stylist-card">
-      <div class="sc-name">${s.name}</div>
-      <div class="sc-metrics">
-        <div><div class="sc-metric-label">New Return %</div>${newRetPill(s.new_return)}</div>
-        <div><div class="sc-metric-label">Regular Cust %</div>${regPctPill(s.reg_pct)}</div>
-        <div><div class="sc-metric-label">CPH</div>${cphPill(s.cph)}</div>
-        <div><div class="sc-metric-label">HC Time</div>${hcPill(s.hc_time)}</div>
-      </div></div>`).join('');
+      <div class="sc-row">
+        <div class="sc-name">${s.name}</div>
+        <div class="sc-custs"><b>${s.cust_count||0}</b> custs</div>
+      </div>
+      <div class="sc-chips">
+        ${chip('NR', s.new_return, [26,30,32], pct1, false)}
+        ${chip('Reg', s.reg_pct, [71,74,77], pct1, false)}
+        ${chip('CPH', s.cph, [1.8,2.0,2.3], fix1, false)}
+        ${chip('HC', s.hc_time, [15,17,18], fixm, true)}
+      </div>
+    </div>`).join('');
 
   const stylistRows=stylists.map(s=>`
     <tr>
