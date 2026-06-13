@@ -314,7 +314,28 @@ const benchLine=(val,color)=>({
 });
 const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}};
 const xt={color:'#7a8099',font:{family:'DM Mono',size:9}};
+const ytTrend={color:'#b0b6c4',font:{family:'DM Mono',size:12,weight:'600'}};
 const gc='rgba(255,255,255,0.04)';
+const pointLabels=(color)=>({
+  id:'pl'+Math.random(),
+  afterDatasetsDraw(c){
+    const ctx=c.ctx, meta=c.getDatasetMeta(0);
+    if(!meta||!meta.data)return;
+    ctx.save();
+    ctx.font='700 13px "DM Sans"';
+    ctx.fillStyle=color||'#e8eaf0';
+    ctx.textAlign='center';
+    ctx.textBaseline='bottom';
+    ctx.shadowColor='rgba(0,0,0,0.55)';
+    ctx.shadowBlur=4;
+    meta.data.forEach((pt,i)=>{
+      const v=c.data.datasets[0].data[i];
+      if(v==null)return;
+      ctx.fillText(v,pt.x,pt.y-8);
+    });
+    ctx.restore();
+  }
+});
 
 function makeTrend(id,snum,data){
   const el=document.getElementById(id);if(!el||charts[id])return;
@@ -322,16 +343,18 @@ function makeTrend(id,snum,data){
   const allVals=[...d.curr,...d.prior.filter(v=>v>0)];
   charts[id]=new Chart(el,{type:'line',
     data:{labels:d.dates,datasets:[
-      {label:'This Year',data:d.curr,borderColor:'rgba(56,189,248,1)',backgroundColor:'rgba(56,189,248,0.08)',borderWidth:2.5,pointRadius:3,pointBackgroundColor:'rgba(56,189,248,1)',tension:0.3,fill:true},
+      {label:'This Year',data:d.curr,borderColor:'rgba(56,189,248,1)',backgroundColor:'rgba(56,189,248,0.08)',borderWidth:2.5,pointRadius:3.5,pointBackgroundColor:'rgba(56,189,248,1)',tension:0.3,fill:true},
       {label:'Last Year',data:d.prior.map(v=>v||null),borderColor:'rgba(156,163,175,0.6)',backgroundColor:'transparent',borderWidth:1.5,pointRadius:2,pointBackgroundColor:'rgba(156,163,175,0.6)',tension:0.3,fill:false,borderDash:[4,3]}
     ]},
     options:{...base,
-      plugins:{legend:{display:true,position:'top',labels:{color:'#7a8099',font:{family:'DM Sans',size:10},boxWidth:20,padding:12}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+c.parsed.y+' custs'}}},
+      layout:{padding:{top:18}},
+      plugins:{legend:{display:true,position:'top',labels:{color:'#b0b6c4',font:{family:'DM Sans',size:12,weight:'600'},boxWidth:22,padding:14}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+c.parsed.y+' custs'}}},
       scales:{
         x:{grid:{color:gc},ticks:xt},
-        y:{grid:{color:gc},ticks:xt,suggestedMin:Math.min(...allVals)*0.88}
+        y:{grid:{color:gc},ticks:ytTrend,suggestedMin:Math.min(...allVals)*0.88}
       }
-    }
+    },
+    plugins:[pointLabels('#7dd3fc')]
   });
 }
 function makeNewRet(id,snum,data){
