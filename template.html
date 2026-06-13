@@ -350,8 +350,8 @@ function makeTrend(id,snum,data){
       layout:{padding:{top:18}},
       plugins:{legend:{display:true,position:'top',labels:{color:'#b0b6c4',font:{family:'DM Sans',size:12,weight:'600'},boxWidth:22,padding:14}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+c.parsed.y+' custs'}}},
       scales:{
-        x:{grid:{color:gc},ticks:xt},
-        y:{grid:{color:gc},ticks:{display:false},suggestedMin:Math.min(...allVals)*0.88}
+        x:{grid:{color:gc},ticks:{display:false}},
+        y:{grid:{color:gc},ticks:ytTrend,suggestedMin:Math.min(...allVals)*0.88}
       }
     },
     plugins:[pointLabels('#7dd3fc')]
