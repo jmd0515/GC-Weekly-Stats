@@ -148,7 +148,7 @@ function pill(v,thresholds,fmt,invert){
 const pct1=v=>v.toFixed(1)+'%';
 const fix1=v=>v.toFixed(1);
 const fixm=v=>v.toFixed(1)+'m';
-const newRetPill=v=>pill(v,[26,30,32],pct1,false);
+const newRetPill=v=>pill(v,[26,28,30],pct1,false);
 const regPctPill=v=>pill(v,[71,74,77],pct1,false);
 const cphPill=v=>pill(v,[1.8,2.0,2.3],fix1,false);
 const hcPill=v=>pill(v,[15,17,18],fixm,true);
@@ -224,10 +224,10 @@ function buildPanel(snum,data){
     <div class="kpi-card" style="--accent-color:var(--green)">
       <div class="kpi-label">New Customers</div><div class="kpi-value">${kpi.new_cust||'—'}</div>
       <div class="kpi-sub">${kpi.new_cust_pct}% of total this week</div></div>
-    <div class="kpi-card" style="--accent-color:${(kpi.new_return||0)>=32?'var(--green)':(kpi.new_return||0)>=30?'var(--yellow)':(kpi.new_return||0)>=26?'var(--orange)':'var(--red)'}">
+    <div class="kpi-card" style="--accent-color:${(kpi.new_return||0)>=30?'var(--green)':(kpi.new_return||0)>=28?'var(--yellow)':(kpi.new_return||0)>=26?'var(--orange)':'var(--red)'}">
       <div class="kpi-label">New Cust Return</div>
       <div class="kpi-value">${kpi.new_return!==null&&kpi.new_return!==undefined?kpi.new_return+'<span>%</span>':'<span style="font-size:16px">—</span>'}</div>
-      <div class="kpi-sub">${kpi.new_return!==null&&kpi.new_return!==undefined?'<span class="badge '+(kpi.new_return>=32?'green':kpi.new_return>=30?'yellow':kpi.new_return>=26?'orange':'red')+'">'+kpi.new_return.toFixed(1)+'%</span>':'not yet available'}</div></div>
+      <div class="kpi-sub">${kpi.new_return!==null&&kpi.new_return!==undefined?'<span class="badge '+(kpi.new_return>=30?'green':kpi.new_return>=28?'yellow':kpi.new_return>=26?'orange':'red')+'">'+kpi.new_return.toFixed(1)+'%</span>':'not yet available'}</div></div>
     <div class="kpi-card" style="--accent-color:${(kpi.repeat_return||0)>=77?'var(--green)':(kpi.repeat_return||0)>=74?'var(--yellow)':(kpi.repeat_return||0)>=71?'var(--orange)':'var(--red)'}">
       <div class="kpi-label">Repeat Return</div>
       <div class="kpi-value">${kpi.repeat_return!==null&&kpi.repeat_return!==undefined?kpi.repeat_return+'<span>%</span>':'<span style="font-size:16px">—</span>'}</div>
@@ -249,7 +249,7 @@ function buildPanel(snum,data){
         <div class="sc-custs"><b>${s.cust_count||0}</b> custs</div>
       </div>
       <div class="sc-chips">
-        ${chip('NR', s.new_return, [26,30,32], pct1, false)}
+        ${chip('NR', s.new_return, [26,28,30], pct1, false)}
         ${chip('Reg', s.reg_pct, [71,74,77], pct1, false)}
         ${chip('CPH', s.cph, [1.8,2.0,2.3], fix1, false)}
         ${chip('HC', s.hc_time, [15,17,18], fixm, true)}
@@ -338,7 +338,7 @@ function makeNewRet(id,snum,data){
   const el=document.getElementById(id);if(!el||charts[id])return;
   const rows=data.stylists[snum].filter(s=>s.new_return!==null);
   const vals=rows.map(s=>s.new_return);
-  const colors=vals.map(v=>v>=32?'rgba(34,197,94,0.7)':v>=26?'rgba(245,158,11,0.7)':'rgba(239,68,68,0.7)');
+  const colors=vals.map(v=>v>=30?'rgba(34,197,94,0.7)':v>=26?'rgba(245,158,11,0.7)':'rgba(239,68,68,0.7)');
   charts[id]=new Chart(el,{type:'bar',
     data:{labels:rows.map(s=>s.name.split(',')[0]),datasets:[{data:vals,backgroundColor:colors,borderRadius:3,borderSkipped:false}]},
     options:{...base,indexAxis:'y',scales:{x:{grid:{color:gc},ticks:{...xt,callback:v=>v+'%'},max:70},y:{grid:{display:false},ticks:{color:'#e8eaf0',font:{family:'DM Sans',size:10}}}},plugins:{...base.plugins,tooltip:{callbacks:{label:c=>' '+c.parsed.x.toFixed(1)+'%'}}}},
