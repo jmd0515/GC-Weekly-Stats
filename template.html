@@ -344,7 +344,7 @@ function makeTrend(id,snum,data){
   charts[id]=new Chart(el,{type:'line',
     data:{labels:d.dates,datasets:[
       {label:'This Year',data:d.curr,borderColor:'rgba(56,189,248,1)',backgroundColor:'rgba(56,189,248,0.08)',borderWidth:2.5,pointRadius:3.5,pointBackgroundColor:'rgba(56,189,248,1)',tension:0.3,fill:true},
-      {label:'Last Year',data:d.prior.map(v=>v||null),borderColor:'rgba(156,163,175,0.6)',backgroundColor:'transparent',borderWidth:1.5,pointRadius:2,pointBackgroundColor:'rgba(156,163,175,0.6)',tension:0.3,fill:false,borderDash:[4,3]}
+      {label:'Last Year',data:d.prior.map(v=>v||null),borderColor:'rgba(156,163,175,0.6)',backgroundColor:'transparent',borderWidth:1.5,pointRadius:2,pointBackgroundColor:'rgba(156,163,175,0.6)',tension:0.3,fill:false,borderDash:[4,3],spanGaps:true}
     ]},
     options:{...base,
       layout:{padding:{top:18}},
