@@ -6,6 +6,31 @@ REM Double-click after dropping a new weekly Power BI export.
 
 cd /d "%~dp0"
 
+REM ── Step 0: Refuse to run if Excel has any file open (~$*.xlsx lock file) ─
+setlocal enabledelayedexpansion
+set LOCKED=
+for %%F in ("~$*.xlsx") do (
+    if exist "%%F" set LOCKED=!LOCKED! "%%F"
+)
+if defined LOCKED (
+    echo.
+    echo ============================================================
+    echo   EXCEL HAS FILES OPEN. Cannot proceed until they are closed.
+    echo ============================================================
+    echo.
+    echo Lock file^(s^) detected:
+    for %%F in ("~$*.xlsx") do if exist "%%F" echo   %%F
+    echo.
+    echo To fix:
+    echo   1. Close the workbook in Excel ^(or the whole Excel app^).
+    echo   2. If lock files remain: Ctrl+Shift+Esc, End 'Microsoft Excel' task.
+    echo   3. Re-run this script.
+    echo.
+    pause
+    exit /b 1
+)
+endlocal
+
 REM ── Step 1: Fetch origin so we know if we're ahead/behind ────────────────
 echo Fetching origin...
 git fetch origin main >nul 2>&1
@@ -53,13 +78,29 @@ REM Commit with today's date in the message.
 for /f "tokens=2 delims==" %%i in ('"wmic os get localdatetime /value"') do set dt=%%i
 set today=%dt:~4,2%/%dt:~6,2%/%dt:~0,4%
 git commit -m "Add weekly All Salons file(s) (%today%)"
+if %errorlevel% neq 0 (
+    echo.
+    echo ============================================================
+    echo   ERROR: commit failed. Nothing was pushed.
+    echo ============================================================
+    echo.
+    echo Common causes: pre-commit hook rejected, staged files empty,
+    echo or an unexpected git state. Run 'git status' in this folder
+    echo for details.
+    echo.
+    pause
+    exit /b 1
+)
 
 :PUSH
 REM Rebase against origin so our push is fast-forward.
 git pull --rebase origin main
 if %errorlevel% neq 0 (
     echo.
-    echo ERROR: rebase failed. Resolve conflicts manually, then run 'git push'.
+    echo ERROR: rebase failed. This usually means Excel reopened one of the
+    echo staged files during the rebase. Close Excel completely
+    echo (Task Manager if needed), then run 'git rebase --continue' in this
+    echo folder, OR just re-run this script.
     pause
     exit /b 1
 )
