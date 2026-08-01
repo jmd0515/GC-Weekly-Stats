@@ -6,28 +6,41 @@ REM Double-click after dropping a new weekly Power BI export.
 
 cd /d "%~dp0"
 
-REM ── Step 0: Refuse to run if Excel has any file open (~$*.xlsx lock file) ─
+REM ── Step 0: Handle Excel lock files (~$*.xlsx) ────────────────────────────
+REM  If Excel is NOT running, the lock files are stale (Excel crashed or was
+REM  killed) — safe to auto-delete.
+REM  If Excel IS running, tell the user to close it and bail out.
 setlocal enabledelayedexpansion
-set LOCKED=
+set HAS_LOCK=0
 for %%F in ("~$*.xlsx") do (
-    if exist "%%F" set LOCKED=!LOCKED! "%%F"
+    if exist "%%F" set HAS_LOCK=1
 )
-if defined LOCKED (
-    echo.
-    echo ============================================================
-    echo   EXCEL HAS FILES OPEN. Cannot proceed until they are closed.
-    echo ============================================================
-    echo.
-    echo Lock file^(s^) detected:
-    for %%F in ("~$*.xlsx") do if exist "%%F" echo   %%F
-    echo.
-    echo To fix:
-    echo   1. Close the workbook in Excel ^(or the whole Excel app^).
-    echo   2. If lock files remain: Ctrl+Shift+Esc, End 'Microsoft Excel' task.
-    echo   3. Re-run this script.
-    echo.
-    pause
-    exit /b 1
+if !HAS_LOCK! equ 1 (
+    tasklist /FI "IMAGENAME eq EXCEL.EXE" 2>nul | find /I "EXCEL.EXE" >nul
+    if !errorlevel! equ 0 (
+        echo.
+        echo ============================================================
+        echo   EXCEL IS RUNNING and has files open. Cannot proceed.
+        echo ============================================================
+        echo.
+        echo Lock file^(s^) detected:
+        for %%F in ("~$*.xlsx") do if exist "%%F" echo   %%F
+        echo.
+        echo To fix:
+        echo   1. Close the workbook in Excel ^(or the whole Excel app^).
+        echo   2. If lock files remain: Ctrl+Shift+Esc, End 'Microsoft Excel' task.
+        echo   3. Re-run this script.
+        echo.
+        pause
+        exit /b 1
+    ) else (
+        echo Cleaning up stale lock files ^(Excel is not running^):
+        for %%F in ("~$*.xlsx") do if exist "%%F" (
+            echo   %%F
+            del /f "%%F" >nul 2>&1
+        )
+        echo.
+    )
 )
 endlocal
 
