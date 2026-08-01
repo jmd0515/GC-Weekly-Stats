@@ -55,7 +55,10 @@ if %errorlevel% neq 0 (
 )
 
 REM ── Step 2: Stage any new/modified weekly files ──────────────────────────
+REM  Accept both naming patterns: 'All Salons MM.DD.YY.xlsx' (spaces + dots)
+REM  and 'All_Salons_MM_DD_YY.xlsx' (underscores, Power BI default).
 git add "All Salons *.xlsx"
+git add "All_Salons_*.xlsx"
 
 REM ── Step 3: Decide what to do based on state ─────────────────────────────
 REM  a) staged changes → commit + push

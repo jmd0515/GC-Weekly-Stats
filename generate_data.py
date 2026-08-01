@@ -83,10 +83,15 @@ def smart_read(filepath, key_col):
 df     = smart_read(EMP_STATS_FILE, 'Salon Number')
 df2    = smart_read(RETURN_STATS_FILE, 'Salon Number')
 
-# System file: the master All_Salons.xlsx plus any weekly "All Salons MM.DD.YY.xlsx"
-# drops in this folder. New weeks just get added to the folder; no manual merge.
+# System file: the master All_Salons.xlsx plus any weekly Power BI export in
+# this folder. Accepts both naming patterns: "All Salons MM.DD.YY.xlsx"
+# (spaces + dots) and "All_Salons_MM_DD_YY.xlsx" (underscores, Power BI default).
 sys_frames = [smart_read(SYSTEM_FILE, 'Salon')]
-for wf in sorted(glob.glob(os.path.join(SCRIPT_DIR, 'All Salons *.xlsx'))):
+weekly_files = sorted(set(
+    glob.glob(os.path.join(SCRIPT_DIR, 'All Salons *.xlsx')) +
+    glob.glob(os.path.join(SCRIPT_DIR, 'All_Salons_*.xlsx'))
+))
+for wf in weekly_files:
     if os.path.basename(wf).startswith('~$'):  # Excel lock files
         continue
     sys_frames.append(smart_read(wf, 'Salon'))
