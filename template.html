@@ -125,7 +125,7 @@
 // New Cust Return: Excellence 38%+, Growth 32-37.9%, Minimum 26-31.9%, Warning <26%
 // Repeat Return:   Excellence 77%+, Growth 74-76.9%, Minimum 71-73.9%, Warning <71%
 // CPH:             Excellence 2.3+, Growth 2.0-2.29, Minimum 1.8-1.99, Warning <1.8
-// HC Time:         Excellence <=15, Growth 15-17, Minimum 17-18, Warning >18
+// HC Time:         on target 14-17 (green), off target <14 or >17 (orange)
 // Avg Wait:        Excellence <=5, Growth 5-9, Minimum 10-14, Warning 15+
 
 function tierLabel(cls) {
@@ -151,7 +151,13 @@ const fixm=v=>v.toFixed(1)+'m';
 const newRetPill=v=>pill(v,[26,28,30],pct1,false);
 const regPctPill=v=>pill(v,[71,74,77],pct1,false);
 const cphPill=v=>pill(v,[1.8,2.0,2.3],fix1,false);
-const hcPill=v=>pill(v,[15,17,18],fixm,true);
+
+// HC Time is a band, not a ladder: cutting too fast is as much a problem as
+// cutting too slow, so anything outside 14-17 is flagged the same way.
+const hcClass=v=>(v>=14&&v<=17)?'green':'orange';
+const hcPill=v=>v===null||v===undefined
+  ? '<span class="pill gray">—</span>'
+  : `<span class="pill ${hcClass(v)}">${fixm(v)}</span>`;
 
 function diffBadge(val,bench,higherBetter,suffix){
   if(val===null||val===undefined||bench===null) return '';
@@ -172,6 +178,10 @@ function chip(label, v, thresholds, fmt, invert){
     cls=v>=thresholds[2]?'green':v>=thresholds[1]?'yellow':v>=thresholds[0]?'orange':'red';
   }
   return `<span class="sc-chip ${cls}"><span class="sc-cl">${label}</span>${fmt(v)}</span>`;
+}
+function hcChip(label, v){
+  if(v===null||v===undefined) return `<span class="sc-chip gray"><span class="sc-cl">${label}</span>—</span>`;
+  return `<span class="sc-chip ${hcClass(v)}"><span class="sc-cl">${label}</span>${fixm(v)}</span>`;
 }
 function ytdStrip(y){
   if(!y) return '';
@@ -238,7 +248,7 @@ function buildPanel(snum,data){
     <div class="kpi-card" style="--accent-color:${waitColor}">
       <div class="kpi-label">Avg Wait</div><div class="kpi-value">${kpi.avg_wait}<span> min</span></div>
       <div class="kpi-sub">${waitBadge} sys ${b.avg_wait}m</div></div>
-    <div class="kpi-card" style="--accent-color:${(kpi.hc_time||99)<=(b.avg_hc_time||15)?'var(--green)':'var(--yellow)'}">
+    <div class="kpi-card" style="--accent-color:var(--${hcClass(kpi.hc_time)})">
       <div class="kpi-label">Avg HC Time</div><div class="kpi-value">${kpi.hc_time}<span> min</span></div>
       <div class="kpi-sub">${diffBadge(kpi.hc_time,b.avg_hc_time,false)} sys ${b.avg_hc_time}</div></div>`;
 
@@ -252,7 +262,7 @@ function buildPanel(snum,data){
         ${chip('NR', s.new_return, [26,28,30], pct1, false)}
         ${chip('Reg', s.reg_pct, [71,74,77], pct1, false)}
         ${chip('CPH', s.cph, [1.8,2.0,2.3], fix1, false)}
-        ${chip('HC', s.hc_time, [15,17,18], fixm, true)}
+        ${hcChip('HC', s.hc_time)}
       </div>
     </div>`).join('');
 
