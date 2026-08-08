@@ -27,6 +27,19 @@ import os
 import glob
 from datetime import datetime
 
+# ── Console encoding ────────────────────────────────────────────────────────
+# The progress output below uses ✓ and box-drawing characters. A Windows
+# console defaults to cp1252, which can't encode them, so a local run (via
+# run.bat) died with UnicodeEncodeError before writing any dashboards. GitHub
+# Actions is unaffected — it runs UTF-8 — so this only bites the manual
+# fallback path. errors='replace' keeps it from ever failing on a character.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, 'reconfigure'):
+        try:
+            _stream.reconfigure(encoding='utf-8', errors='replace')
+        except (ValueError, OSError):
+            pass
+
 # ── File names ──────────────────────────────────────────────────────────────
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
