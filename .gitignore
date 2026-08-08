@@ -11,3 +11,4 @@ node_modules/
 screenshots/
 oauth_client.json
 .pbi-profile/
+commit_weekly.log
