@@ -123,6 +123,40 @@ if ($locks.Count -gt 0) {
     Say ''
 }
 
+# -- Step 0d: rescue exports saved to the old OneDrive folder ----------------
+#  This repo used to live on the Desktop under OneDrive. That folder still
+#  exists as a backup, and the weekly export keeps getting saved there out of
+#  habit - after which this script correctly reports "nothing to do" and the
+#  week silently never gets committed. Rather than rely on remembering, sweep
+#  any weekly file found there into this folder first.
+#  Safe by construction: copy, verify the hash matches, and only then delete
+#  the original. A file that already exists here is left alone.
+$LegacyDir = Join-Path $env:USERPROFILE 'OneDrive\Desktop\GC-Weekly-Stats'
+if ((Test-Path -LiteralPath $LegacyDir) -and ($LegacyDir -ne $PSScriptRoot)) {
+    $strays = @(Get-ChildItem -LiteralPath $LegacyDir -File -ErrorAction SilentlyContinue |
+                Where-Object { $_.Name -like 'All Salons *.xlsx' -or $_.Name -like 'All_Salons_*.xlsx' })
+    foreach ($f in $strays) {
+        $dest = Join-Path $PSScriptRoot $f.Name
+        if (Test-Path -LiteralPath $dest) { continue }
+        try {
+            Copy-Item -LiteralPath $f.FullName -Destination $dest -ErrorAction Stop
+            if ((Get-FileHash -LiteralPath $dest).Hash -eq (Get-FileHash -LiteralPath $f.FullName).Hash) {
+                Remove-Item -LiteralPath $f.FullName -Force -ErrorAction Stop
+                Say "Found '$($f.Name)' in the old Desktop folder - moved it here."
+            } else {
+                Remove-Item -LiteralPath $dest -Force -ErrorAction SilentlyContinue
+                Say "Copy of '$($f.Name)' did not verify - left it in the old folder."
+            }
+        } catch {
+            #  Usually a OneDrive cloud-only placeholder with the sync engine
+            #  stopped: the content is not on this machine, so nothing can read
+            #  it. Never fatal - just report and carry on.
+            Say "Could not move '$($f.Name)' out of the old folder: $($_.Exception.Message)"
+        }
+    }
+    if ($strays.Count -gt 0) { Say '' }
+}
+
 # -- Step 1: fetch origin so we know if we're ahead/behind -------------------
 Say 'Fetching origin...'
 if ((Invoke-Git @('fetch', 'origin', 'main')) -ne 0) {
@@ -191,9 +225,13 @@ Say ''
 Say 'Rebasing onto origin/main...'
 if ((Invoke-Git @('pull', '--rebase', 'origin', 'main') 1) -ne 0) {
     Say 'The real git error is printed above and saved in the log.'
-    Say 'Your commit is safe locally. Most likely Excel or OneDrive reopened a'
-    Say 'staged file mid-rebase. Close Excel completely (Task Manager if needed),'
-    Say "then run 'git rebase --continue' here, or just re-run this script."
+    Say 'Your commit is safe locally - nothing was lost.'
+    Say ''
+    Say 'If the error above mentions unstaged changes: you have edits to other'
+    Say "files in this folder. Commit or stash them, then re-run this script."
+    Say 'If it mentions a conflict or a locked file: close Excel completely'
+    Say "(Task Manager if needed), then run 'git rebase --continue' here, or"
+    Say 'just re-run this script.'
     Stop-Here 1 'REBASE FAILED - nothing was pushed'
 }
 
