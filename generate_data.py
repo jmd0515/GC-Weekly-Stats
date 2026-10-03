@@ -93,13 +93,45 @@ def smart_read(filepath, key_col):
     # Fallback to default
     return pd.read_excel(filepath)
 
+def resolve_week_dates(frame, label):
+    """Normalize SalonWeekEndingDate, keeping Power BI per-salon subtotal rows.
+
+    An export can carry a subtotal row per salon whose date cell reads "Total"
+    instead of a date. In the 10/02/26 export those subtotals were identical to
+    the dated detail rows for all 86 salons that had both - and for five salons,
+    including all four of ours, the subtotal was the ONLY row present. Dropping
+    them therefore removed those salons from the week entirely and rendered
+    every KPI blank.
+
+    When a file covers a single week, a subtotal is that week's data, so adopt
+    the file's own week for those rows. If a file spans several weeks the
+    subtotal is ambiguous, so drop it instead.
+    """
+    # One old export (All Salons 01.30.26.xlsx) names this column
+    # "Salon Week Ending Date" instead. Its rows have always been dropped by the
+    # merge below; leave that behaviour alone rather than silently changing
+    # historical trend numbers here.
+    if 'SalonWeekEndingDate' not in frame.columns:
+        return frame
+    parsed = pd.to_datetime(frame['SalonWeekEndingDate'], errors='coerce')
+    weeks = pd.Series(parsed.dropna().unique())
+    if len(weeks) == 1:
+        parsed = parsed.fillna(weeks.iloc[0])
+    undated = int(parsed.isna().sum())
+    if undated:
+        print(f"    note: dropped {undated} undated row(s) from {label}")
+    out = frame.copy()
+    out['SalonWeekEndingDate'] = parsed
+    return out[parsed.notna()].reset_index(drop=True)
+
 df     = smart_read(EMP_STATS_FILE, 'Salon Number')
 df2    = smart_read(RETURN_STATS_FILE, 'Salon Number')
 
 # System file: the master All_Salons.xlsx plus any weekly Power BI export in
 # this folder. Accepts both naming patterns: "All Salons MM.DD.YY.xlsx"
 # (spaces + dots) and "All_Salons_MM_DD_YY.xlsx" (underscores, Power BI default).
-sys_frames = [smart_read(SYSTEM_FILE, 'Salon')]
+sys_frames = [resolve_week_dates(smart_read(SYSTEM_FILE, 'Salon'),
+                                os.path.basename(SYSTEM_FILE))]
 weekly_files = sorted(set(
     glob.glob(os.path.join(SCRIPT_DIR, 'All Salons *.xlsx')) +
     glob.glob(os.path.join(SCRIPT_DIR, 'All_Salons_*.xlsx'))
@@ -107,7 +139,8 @@ weekly_files = sorted(set(
 for wf in weekly_files:
     if os.path.basename(wf).startswith('~$'):  # Excel lock files
         continue
-    sys_frames.append(smart_read(wf, 'Salon'))
+    sys_frames.append(resolve_week_dates(smart_read(wf, 'Salon'),
+                                         os.path.basename(wf)))
     print(f"  ✓ {os.path.basename(wf)}")
 sys_df = (
     pd.concat(sys_frames, ignore_index=True)
@@ -116,16 +149,6 @@ sys_df = (
 )
 # Some exports include a trailing "Totals" row — keep only real "NNNN: Name" salon rows.
 sys_df = sys_df[sys_df['Salon'].astype(str).str.match(r'^\d{4}:')].reset_index(drop=True)
-
-# Power BI can also emit a per-salon subtotal row that keeps the "NNNN: Name"
-# salon value but writes "Total" into the date cell. Those slip past the filter
-# above and then crash pd.to_datetime further down, failing the whole build, so
-# require a parseable week date here.
-_week_parsed = pd.to_datetime(sys_df['SalonWeekEndingDate'], errors='coerce')
-_subtotal_rows = int(_week_parsed.isna().sum())
-if _subtotal_rows:
-    print(f"  Skipped {_subtotal_rows} subtotal row(s) with no week date (e.g. 'Total')")
-sys_df = sys_df[_week_parsed.notna()].reset_index(drop=True)
 
 # ── Parse dates ───────────────────────────────────────────────────────────────
 if 'Date' in df.columns:
