@@ -117,6 +117,16 @@ sys_df = (
 # Some exports include a trailing "Totals" row — keep only real "NNNN: Name" salon rows.
 sys_df = sys_df[sys_df['Salon'].astype(str).str.match(r'^\d{4}:')].reset_index(drop=True)
 
+# Power BI can also emit a per-salon subtotal row that keeps the "NNNN: Name"
+# salon value but writes "Total" into the date cell. Those slip past the filter
+# above and then crash pd.to_datetime further down, failing the whole build, so
+# require a parseable week date here.
+_week_parsed = pd.to_datetime(sys_df['SalonWeekEndingDate'], errors='coerce')
+_subtotal_rows = int(_week_parsed.isna().sum())
+if _subtotal_rows:
+    print(f"  Skipped {_subtotal_rows} subtotal row(s) with no week date (e.g. 'Total')")
+sys_df = sys_df[_week_parsed.notna()].reset_index(drop=True)
+
 # ── Parse dates ───────────────────────────────────────────────────────────────
 if 'Date' in df.columns:
     df['DateParsed'] = pd.to_datetime(
