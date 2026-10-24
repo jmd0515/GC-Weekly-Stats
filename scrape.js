@@ -86,11 +86,52 @@ async function login(page) {
   console.log('  Logged in.');
 }
 
+// Salondata sometimes loads the report page without generating the report
+// (the Download CSV button stays disabled/hidden). If that happens, click
+// "Run Report" and wait for Download CSV to become usable before exporting.
+async function ensureReportRun(page, report) {
+  const csvReady = () => {
+    const b = document.querySelector('#csvButton');
+    return !!b && !b.disabled && b.offsetParent !== null;
+  };
+  if (await page.evaluate(csvReady)) return;
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    console.log(`  Report not generated yet; clicking "Run Report" (attempt ${attempt})...`);
+    const runBtn = page.locator(
+      'button:has-text("Run Report"), input[value="Run Report"], a:has-text("Run Report")'
+    ).first();
+    if (await runBtn.count()) {
+      await runBtn.click().catch((e) => console.log(`  Run Report click failed: ${e.message}`));
+    } else {
+      console.log('  No "Run Report" button found; waiting for the report to load...');
+    }
+    try {
+      await page.waitForFunction(csvReady, null, { timeout: 60000, polling: 1000 });
+      console.log('  Report generated.');
+      return;
+    } catch (e) {
+      console.log(`  Report still not ready after attempt ${attempt}.`);
+    }
+  }
+
+  const slug = report.label.replace(/\s+/g, '_').toLowerCase();
+  await page.screenshot({
+    path: path.join(SCREENSHOT_DIR, `${slug}_not_generated.png`),
+    fullPage: true,
+  });
+  throw new Error(
+    `[${report.label}] report never generated (Download CSV stayed disabled). ` +
+    `See screenshots/${slug}_not_generated.png`
+  );
+}
+
 async function downloadReport(page, report) {
   console.log(`\n[${report.label}] week ending ${FRI}`);
   console.log(`  navigating to ${report.hash}`);
   await page.goto(BASE_URL + report.hash, { waitUntil: 'networkidle', timeout: 30000 });
   await page.waitForTimeout(4000);
+  await ensureReportRun(page, report);
 
   const slug = report.label.replace(/\s+/g, '_').toLowerCase();
   await page.screenshot({
